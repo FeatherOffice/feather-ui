@@ -91,6 +91,7 @@ Os desenhos específicos adicionais estão disponíveis como `editar_dinamica`,
 | `ribbon`, `componentes` | faixa de opções: abas, grupos, botões grandes e pequenos |
 | `dropdown`, `seletor_cor`, `formatacao`, `alinhamento` | menus suspensos, cores, fonte e alinhamento |
 | `ajuda` | janela de ajuda F1 pesquisável, a mesma em todos os aplicativos |
+| `monitor` | monitor F12 inteiro (memória, CPU, console, métricas); o aplicativo só manda mensagens e métricas |
 | `configuracoes` | tela de configurações (lateral + cartões) |
 | `atalhos`, `acessibilidade` | atalhos de teclado e apoio à acessibilidade |
 | `efeitos_imagem` | painel de ajustes rápidos de imagem |
