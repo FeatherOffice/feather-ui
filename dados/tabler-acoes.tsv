@@ -1,0 +1,120 @@
+align-center	Text	text-align,alignment,paragraph,typography,text,format,formatting,centered,middle,align,center	M4 6l16 0|M8 12l8 0|M6 18l12 0
+align-justified	Text	text-align,alignment,paragraph,typography,text,format,formatting,justify,justification,block,align,justified	M4 6l16 0|M4 12l16 0|M4 18l12 0
+align-left	Text	text-align,alignment,paragraph,typography,text,format,formatting,flush-left,left-align,align,left	M4 6l16 0|M4 12l10 0|M4 18l14 0
+align-right	Text	text-align,alignment,paragraph,typography,text,format,formatting,flush-right,right-align,align,right	M4 6l16 0|M10 12l10 0|M6 18l14 0
+arrow-back-up	Arrows	undo,return,revert,previous,reply,history,pointer,navigation,arrow,back	M9 14l-4 -4l4 -4|M5 10h11a4 4 0 1 1 0 8h-1
+arrow-forward-up	Arrows	redo,share,next,repeat,send,pointer,navigation,direction,arrow,forward	M15 14l4 -4l-4 -4|M19 10h-11a4 4 0 1 0 0 8h1
+bold	Text	text,format,formatting,typography,font,strong,bold-text,heavy,weight,bold	M7 5h6a3.5 3.5 0 0 1 0 7h-6l0 -7|M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7
+clipboard	Document	clipboard,paste,copy,document,task,notes,checklist,board	M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2|M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2
+copy	Text	copy,duplicate,clone,clipboard,paste,copy-paste,files,documents	M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666|M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1
+cut	Design	cut,scissors,clip,trim,snip,cut-paste,clipboard,edit	M4 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0|M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0|M9.15 14.85l8.85 -10.85|M6 4l8.85 10.85
+device-desktop	Devices	monitor,screen,display,computer	M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v11a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z|M7 21h10|M9 18v3|M15 18v3
+device-floppy	Devices	floppy,floppy-disk,save,disk,diskette,storage,file,retro,device	M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2|M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0|M14 4l0 4l-6 0l0 -4
+file-export	Document	export,save-as,send,share,arrow-right,document,file,output,extract	M14 3v4a1 1 0 0 0 1 1h4|M11.5 21h-4.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v5m-5 6h7m-3 -3l3 3l-3 3
+file-plus	Document	add,new,create,new-file,document,file,plus,insert,blank	M14 3v4a1 1 0 0 0 1 1h4|M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2|M12 11l0 6|M9 14l6 0
+folder-open	Document	folder-open,open-folder,directory,open,browse,files,explore,expand,dir	M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2
+help	System	help	M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0|M12 17l0 .01|M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4
+italic	Text	italic,text-editor,typography,font,text-format,emphasis,style,slanted	M11 5l6 0|M7 19l6 0|M14 5l-4 14
+layout-sidebar	Design	sidebar,side-panel,drawer,left,layout,ui,navigation	M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12|M9 4l0 16
+list	Text	list,bullet-list,unordered-list,bullets,items,menu,text-editor	M9 6l11 0|M9 12l11 0|M9 18l11 0|M5 6l0 .01|M5 12l0 .01|M5 18l0 .01
+list-details	Text	list,details,list-view,items,rows,thumbnails,menu	M13 5h8|M13 9h5|M13 15h8|M13 19h5|M3 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4|M3 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4
+list-numbers	Text	numbered-list,ordered-list,ol,numbers,list,text-editor	M11 6h9|M11 12h9|M12 18h8|M4 16a2 2 0 1 1 4 0c0 .591 -.5 1 -1 1.5l-3 2.5h4|M6 10v-6l-2 2
+menu-2	System	hamburger	M4 6l16 0|M4 12l16 0|M4 18l16 0
+page-break	Document	page-break-separator,break,document,print,layout,divider,split,page	M14 3v4a1 1 0 0 0 1 1h4|M19 18v1a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-1|M3 14h3m4.5 0h3m4.5 0h3|M5 10v-5a2 2 0 0 1 2 -2h7l5 5v2
+photo	Media	image,picture,gallery,img,photography,media,thumbnail,landscape,jpg,png,wallpaper,photo	M15 8h.01|M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12|M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5|M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3
+search	System	find,magnifier,magnifying-glass,lookup,zoom,explore,query,browse,search	M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0|M21 21l-6 -6
+settings	System	cog,gear,preferences,configuration,options,config,setup,control,settings	M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065|M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0
+strikethrough	Text	strike-through,strike,text,formatting,editor,typography,deleted,crossed-out,font,strikethrough	M5 12l14 0|M16 6.5a4 2 0 0 0 -4 -1.5h-1a3.5 3.5 0 0 0 0 7h2a3.5 3.5 0 0 1 0 7h-1.5a4 2 0 0 1 -4 -1.5
+table	Database	spreadsheet,grid,data,rows,columns,sheet,excel,cells,database,table	M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14|M3 10h18|M10 3v18
+underline	Text	underline,text,formatting,editor,typography,font,underscore,emphasis	M7 5v5a5 5 0 0 0 10 0v-5|M5 19h14
+x	System	close,cancel,remove,delete,dismiss,exit,clear,cross,times,multiply,x	M18 6l-12 12|M6 6l12 12
+zoom-in	Map	zoom-in,magnify,enlarge,plus,magnifier,magnifying-glass,scale,zooming,zoom,in	M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0|M7 10l6 0|M10 7l0 6|M21 21l-6 -6
+zoom-out	Map	zoom-out,shrink,reduce,minus,magnifier,magnifying-glass,scale,zooming,zoom,out	M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0|M7 10l6 0|M21 21l-6 -6
+clock	FeatherSheet	icone migrado do TypeScript relogio	M8 13.8A5.8 5.8 0 1 1 8 2.2a5.8 5.8 0 0 1 0 11.6Z M8 5v3.4l2.4 1.4
+edit	FeatherSheet	icone migrado do TypeScript lapis	M3 13h3l7.2-7.2a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0L3 10v3Z M9.5 5.5l2 2
+printer	FeatherSheet	icone migrado do TypeScript imprimir	M4.6 6.2V2.8h6.8v3.4 M4.6 12h-1.8V6.2h10.4V12h-1.8 M4.6 9.4h6.8v3.8H4.6Z
+bucket	Map	paint-bucket,fill,color,paint,preenchimento,balde	M10 3l10 10 -7 7 -10 -10z|M10 3l2 -2|M3 10l10 10|M19 15c-1 1.4-2 2.5-2 3.5a2 2 0 0 0 4 0c0-1-1-2.1-2-3.5z
+brush	FeatherSheet	icone migrado do TypeScript pincel	M5.4 9.6 2.8 12.2c-.5.5-.5 1.3 0 1.8s1.3.5 1.8 0L7.2 11.4 M6.2 8.8l1 1 M12.6 2.6 7 8.2l.8.8 5.6-5.6a.6.6 0 0 0-.8-.8Z M9.4 6.6l-2.6 2.6 2 2 2.6-2.6Z
+plus	FeatherSheet	icone migrado do TypeScript mais	M8 3v10 M3 8h10
+text-wrap	FeatherSheet	icone migrado do TypeScript quebra	M2.5 3.8h11 M2.5 7.4h8.2a2.2 2.2 0 1 1 0 4.4H8.6 M10.4 10 8.6 11.8l1.8 1.8 M2.5 12h3.6
+square	FeatherSheet	icone migrado do TypeScript mesclar	M2.4 3.8h11.2v8.4H2.4Z M8 3.8v2.4 M8 9.8v2.4 M5.2 8h5.6 M9.4 6.6 10.8 8 9.4 9.4 M6.6 6.6 5.2 8l1.4 1.4
+currency-dollar	FeatherSheet	icone migrado do TypeScript numero	M3 6.2h10 M3 9.8h10 M6.4 3.4 5.2 12.6 M10.8 3.4 9.6 12.6
+percentage	FeatherSheet	icone migrado do TypeScript numero	M3 6.2h10 M3 9.8h10 M6.4 3.4 5.2 12.6 M10.8 3.4 9.6 12.6
+palette	FeatherSheet	icone migrado do TypeScript paleta	M8 2.6a5.4 5.4 0 0 0 0 10.8c.9 0 1.2-.6 1.2-1.1 0-1 .8-1.1 1.6-1.1h1a2.6 2.6 0 0 0 2.6-2.6C14.4 5.2 11.5 2.6 8 2.6Z M5.4 7.4h.01 M8 5.4h.01 M10.6 7.4h.01
+eraser	FeatherSheet	icone migrado do TypeScript limpar	M6.4 13.4h6.9 M9.8 3.4 3.4 9.8l2.8 2.8 6.4-6.4Z M7.4 5.8l2.8 2.8
+arrows-horizontal	FeatherSheet	icone migrado do TypeScript coluna	M2.4 3.6h11.2v8.8H2.4Z M6.3 3.6v8.8 M9.7 3.6v8.8
+sum	FeatherSheet	icone migrado do TypeScript soma	M12.2 3.4H4.4l4 4.6-4 4.6h7.8
+arrow-down	FeatherSheet	icone migrado do TypeScript seta-baixo	M4 6l4 4 4-4
+eye-off	FeatherSheet	icone migrado do TypeScript mostrar	M8 4.2c3.4 0 5.6 3.8 5.6 3.8S11.4 11.8 8 11.8 2.4 8 2.4 8 4.6 4.2 8 4.2Z M8 9.6A1.6 1.6 0 1 1 8 6.4a1.6 1.6 0 0 1 0 3.2Z
+filter	FeatherSheet	icone migrado do TypeScript filtro	M2.6 3.6h10.8L9.2 8.4v4.4L6.8 11.4V8.4Z
+sort-ascending	FeatherSheet	icone migrado do TypeScript ordenar	M4.4 3.4v9.2 M2.6 10.8 4.4 12.6 6.2 10.8 M8.6 4.4h5 M8.6 7.6h4 M8.6 10.8h3
+sort-descending	FeatherSheet	icone migrado do TypeScript ordenar	M4.4 3.4v9.2 M2.6 10.8 4.4 12.6 6.2 10.8 M8.6 4.4h5 M8.6 7.6h4 M8.6 10.8h3
+trash	FeatherSheet	icone migrado do TypeScript excluir	M3.6 4.8h8.8 M6.4 4.8V3.2h3.2v1.6 M5 4.8l.6 8.4h4.8l.6-8.4
+chart-bar	FeatherSheet	icone migrado do TypeScript grafico	M3 13V8.4 M6.6 13V4.4 M10.2 13V9.6 M13.4 13V6.2
+tag	FeatherSheet	icone migrado do TypeScript nomeado	M2.6 3.8h10.8v8.4H2.6Z M2.6 6.6h10.8 M6.2 6.6v5.6
+link	FeatherSheet	icone migrado do TypeScript link	M6.8 9.2l2.4-2.4 M5.6 6.8L4.4 8a2.1 2.1 0 0 0 3 3l1.2-1.2 M10.4 9.2l1.2-1.2a2.1 2.1 0 0 0-3-3L7.4 6.2
+columns	FeatherSheet	icone migrado do TypeScript coluna	M2.4 3.6h11.2v8.8H2.4Z M6.3 3.6v8.8 M9.7 3.6v8.8
+checks	FeatherSheet	icone migrado do TypeScript validacao	M2.4 3.6h11.2v8.8H2.4Z M4.8 8.2l2 2 4-4.4
+refresh	FeatherSheet	icone migrado do TypeScript refazer	M12.8 8.2H6.5a3.4 3.4 0 1 0 0 6.8h3.3 M12.8 8.2 10 5.4 M12.8 8.2 10 11
+math-function	FeatherSheet	icone migrado do TypeScript funcao	M5.4 13.2c1.6 0 2-1 2.2-2.4l1.4-8c.2-1.2.7-2 2-2 M4.6 6.6h5.6 M10.2 9.4l3.2 3.6 M13.4 9.4l-3.2 3.6
+code	FeatherSheet	icone migrado do TypeScript macros	M6 4.4 2.6 8 6 11.6 M10 4.4 13.4 8 10 11.6
+lock	FeatherSheet	icone migrado do TypeScript cadeado	M4.4 7.4h7.2v6.2H4.4Z M5.9 7.4V5.3a2.1 2.1 0 0 1 4.2 0v2.1 M8 9.8v1.4
+arrows-maximize	FeatherSheet	icone migrado do TypeScript tela	M2.8 6V2.8H6 M10 2.8h3.2V6 M13.2 10v3.2H10 M6 13.2H2.8V10
+player-play	FeatherSheet	icone migrado do TypeScript executar	M5 3.2v9.6L13 8Z
+window	FeatherSheet	icone migrado do TypeScript pagina	M4 2.8h5l3 3v7.4H4Z M9 2.8v3h3
+keyboard	FeatherSheet	icone migrado do TypeScript teclado	M2.2 4.4h11.6v7.2H2.2Z M4.6 6.8h.01 M7 6.8h.01 M9.4 6.8h.01 M11.8 6.8h.01 M5.4 9.4h5.2
+info-circle	FeatherSheet	icone migrado do TypeScript ajuda	M8 13.8A5.8 5.8 0 1 1 8 2.2a5.8 5.8 0 0 1 0 11.6Z M6.4 6.4a1.7 1.7 0 0 1 3.3.6c0 1.1-1.7 1.4-1.7 2.6 M8 11.6h.01
+minus	FeatherSheet	icone migrado do TypeScript seta-esquerda	M10 4l-4 4 4 4
+folder	FeatherSheet	Editor de macros VBE	M2.2 4.3h4l1.4 1.5h6.2v6.8H2.2Z
+chevron-down	FeatherSheet	Editor de macros VBE	M3.5 6L8 10.5L12.5 6
+chevron-right	FeatherSheet	Editor de macros VBE	M6 3.5L10.5 8L6 12.5
+chevron-left	FeatherSheet	Impressão	M10 3.5L5.5 8L10 12.5
+file-code	FeatherSheet	Editor de macros VBE	M4 2.2h5l3 3v8.6H4Z|M9 2.2v3h3|M7 8l-1.2 1.2L7 10.4|M9 8l1.2 1.2L9 10.4
+player-pause	FeatherSheet	Editor de macros VBE	M5.3 4.2v7.6|M10.7 4.2v7.6
+player-stop	FeatherSheet	Editor de macros VBE	M4.6 4.6h6.8v6.8H4.6Z
+terminal	FeatherSheet	Editor de macros VBE	M2.6 3.5h10.8v9H2.6Z|M4.6 6l2 2-2 2|M8.3 10.4h2.8
+sitemap	FeatherSheet	Editor de macros VBE	M8 2.5v3.5|M4 8v2|M12 8v2|M4 8h8|M8 6v2|M2.5 10h3v3h-3Z|M10.5 10h3v3h-3Z
+eye	FeatherSheet	Editor de macros VBE	M1.8 8c1.7-2.8 3.9-4.2 6.2-4.2s4.5 1.4 6.2 4.2c-1.7 2.8-3.9 4.2-6.2 4.2S3.5 10.8 1.8 8Z|M8 5.8a2.2 2.2 0 1 1 0 4.4a2.2 2.2 0 0 1 0-4.4
+bug	FeatherSheet	Editor de macros VBE	M8 5.2v7.5|M5 3L3.5 1.9|M11 3l1.5-1.1|M3.5 6h-2|M12.5 6h2|M3.5 10h-2|M12.5 10h2|M5.1 4.2h5.8v6.4a2.9 2.9 0 0 1-5.8 0Z
+pointer	FeatherSheet	Editor de macros VBE	M3 2.5l9 6-4 1-1.5 3.5Z
+forms	FeatherSheet	Editor de macros VBE	M3 2.2h10v11.6H3Z|M5 5h6|M5 8h2|M9 8h2|M5 11h6
+text-size	FeatherSheet	Editor de macros VBE	M2.5 5V3.5h8V5|M6.5 3.5V12|M4.5 12h4
+checkbox	FeatherSheet	Editor de macros VBE	M3 3h10v10H3Z|M5.2 8l1.8 1.8 3.6-3.6
+circle-dot	FeatherSheet	Editor de macros VBE	M8 2.4a5.6 5.6 0 1 1 0 11.2a5.6 5.6 0 0 1 0-11.2|M8 6.4a1.6 1.6 0 1 1 0 3.2a1.6 1.6 0 0 1 0-3.2
+list-select	FeatherSheet	Editor de macros VBE	M3 3h10v2H3Z|M3 7h10v2H3Z|M3 11h10v2H3Z
+bolt	FeatherSheet	Editor de macros VBE	M9 1.7L3.9 8.3H8l-.9 6 5-7H8.2Z
+circle-check	FeatherSheet	Editor de macros VBE	M8 2.5a5.5 5.5 0 1 1 0 11a5.5 5.5 0 0 1 0-11|M5 8l2 2 4-4
+arrow-step	FeatherSheet	Editor de macros VBE	M3 8h8|M8 5l3 3-3 3|M12.5 4v8
+layout-grid	FeatherSheet	Editor de macros VBE	M3 3h4v4H3Z|M9 3h4v4H9Z|M3 9h4v4H3Z|M9 9h4v4H9Z
+input	FeatherSheet	Campo de texto do editor de macros	M2.5 3.3h11v9.4h-11Z|M5 6.6h6|M5 9h4
+pivot-table	Inserir	icone,insert,spreadsheet	M4 4h16v16H4z|M4 10h16|M10 4v16|M15 14h3m-3 3h3|M13 7h5
+table-suggest	Inserir	icone,insert,spreadsheet	M3 5h18v14H3z|M3 10h18|M9 5v14|M15 12l.7 1.8L18 14.5l-2.3 .7L15 17l-.7-1.8-2.3-.7 2.3-.7z
+shapes	Inserir	icone,insert,spreadsheet	M4 4h9v9H4z|M15 10a5 5 0 1 0 0 10a5 5 0 0 0 0 -10|M5 20l4-6 4 6z
+cube	Inserir	icone,insert,spreadsheet	M12 3l9 5v8l-9 5-9-5V8z|M3 8l9 5 9-5|M12 13v8
+screenshot	Inserir	icone,insert,spreadsheet	M6 3H4a1 1 0 0 0 -1 1v3|M18 3h2a1 1 0 0 1 1 1v3|M3 17v3a1 1 0 0 0 1 1h3|M21 17v3a1 1 0 0 1 -1 1h-3|M7 8h10v8H7z|M8 14l3-3 2 2 2-2 2 3
+chart-suggest	Inserir	icone,insert,spreadsheet	M3 3v18h18|M7 16v-5h3v5z|M12 16v-9h3v9z|M17 16v-4h3v4z|M19 3l.6 1.4L21 5l-1.4 .6L19 7l-.6-1.4L17 5l1.4-.6z
+chart-columns	Inserir	icone,insert,spreadsheet	M3 3v18h18|M6 17V9h3v8z|M11 17V5h3v12z|M16 17v-6h3v6z
+chart-line	Inserir	icone,insert,spreadsheet	M3 3v18h18|M5 17l5-6 4 2 6-8|M8 11h.01|M14 13h.01
+chart-pie	Inserir	icone,insert,spreadsheet	M11 3a9 9 0 1 0 10 10h-10z|M14 3v7h7a8 8 0 0 0 -7 -7
+chart-area	Inserir	icone,insert,spreadsheet	M3 3v18h18|M5 17l5-6 4 3 6-9v12z|M5 17h15
+chart-scatter	Inserir	icone,insert,spreadsheet	M3 3v18h18|M7 15h.01|M9 8h.01|M12 12h.01|M15 6h.01|M18 16h.01|M19 9h.01
+chart-combo	Inserir	icone,insert,spreadsheet	M3 3v18h18|M6 18v-6h3v6z|M12 18V9h3v9z|M18 18v-4h3v4z|M6 9l6-4 5 3 4-4
+chart-waterfall	Inserir	icone,insert,spreadsheet	M3 3v18h18|M5 7h4v5H5z|M10 12h4v5h-4z|M15 8h4v9h-4z|M9 12h1|M14 12h1
+chart-map	Inserir	icone,insert,spreadsheet	M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z|M9 3v15|M15 6v15|M17 10l2 2-2 2-2-2z
+chart-pivot	Inserir	icone,insert,spreadsheet	M3 3v18h18|M6 17v-6h3v6z|M11 17V8h3v9z|M16 17v-4h3v4z|M17 5h4l-2-2|M21 5l-2 2
+sparkline-line	Inserir	icone,insert,spreadsheet	M3 6h18v12H3z|M5 15l4-5 4 4 3-6 3 3
+sparkline-columns	Inserir	icone,insert,spreadsheet	M3 6h18v12H3z|M6 16v-4h3v4z|M11 16V9h3v7z|M16 16v-5h3v5z
+sparkline-winloss	Inserir	icone,insert,spreadsheet	M3 6h18v12H3z|M5 12h14|M6 8h3v4H6z|M11 12h3v4h-3z|M16 9h3v3h-3z
+slicer	Inserir	icone,insert,spreadsheet	M3 4h18v16H3z|M6 7h12v3H6z|M6 13h5v4H6z|M14 13h4v4h-4z
+timeline	Inserir	icone,insert,spreadsheet	M3 6h18v13H3z|M6 3v6|M18 3v6|M3 10h18|M7 14h2|M11 14h2|M15 14h3
+message-circle	Inserir	icone,insert,spreadsheet	M20 11.5a8.5 8.5 0 0 1 -8.5 8.5 8.4 8.4 0 0 1 -4-.9L3 21l1.8-4a8.5 8.5 0 1 1 15.2-5.5|M8 11h8|M8 14h5
+text-box	Inserir	icone,insert,spreadsheet	M4 5h16v14H4z|M7 9h10|M12 9v7|M9 16h6
+header-footer	Inserir	icone,insert,spreadsheet	M5 3h14v18H5z|M8 7h8|M8 10h8|M8 17h8|M10 19h4
+wordart	Inserir	icone,insert,spreadsheet	M4 19l6-14h4l6 14|M7 13h10|M3 21h18|M16 4l1-2 1 2 2 1-2 1-1 2-1-2-2-1z
+signature	Inserir	icone,insert,spreadsheet	M3 19c3-7 5 3 8-3 3-6 3 5 6 0l4-2|M14 8l5-5 2 2-5 5-3 1z
+object	Inserir	icone,insert,spreadsheet	M5 3h9l5 5v13H5z|M14 3v5h5|M8 12h8v6H8z|M10 14h4
+equation	Inserir	icone,insert,spreadsheet	M4 6h6|M7 3v6|M14 5h6|M14 9h6|M4 15h6|M4 19h6|M14 15l6 4|M20 15l-6 4
+omega	Inserir	icone,insert,spreadsheet	M8 19h-4v-4|M16 19h4v-4|M4 15h3a8 8 0 1 1 10 0h3|M8 19v-4|M16 19v-4
+line-height	Text	text,height,row,spacing,altura,linha	M3 8l3 -3l3 3|M3 16l3 3l3 -3|M6 5l0 14|M13 6l7 0|M13 12l7 0|M13 18l7 0
+arrow-autofit-width	Arrows	autofit,width,column,largura,coluna	M4 12v-6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6|M10 18h-7|M21 18h-7|M6 15l-3 3l3 3|M18 15l3 3l-3 3
+arrow-autofit-height	Arrows	autofit,height,row,altura,linha	M12 20h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h6|M18 4v17|M15 18l3 3l3 -3|M15 7l3 -3l3 3
