@@ -131,7 +131,7 @@ fn icone_topico(id: &str) -> &'static str {
         "graficos" => "chart-bar", "dados" => "filter",
         "macros" => "code", "arquivos" => "folder-open",
         "config" => "settings", "funcoes" => "math-function",
-        "atalhos" => "keyboard", _ => "help",
+        "atalhos" => "keyboard", "slides"=>"layout-grid", "elementos"|"formas"=>"forms", "texto"=>"text-size", "apresentar"=>"player-play", "configuracoes"=>"settings", _ => "help",
     }
 }
 fn guia_do_topico(s: usize, i: usize, t: &Topico) -> Guia {
@@ -199,14 +199,15 @@ fn navega(catalogo: &Catalogo, estado: &Estado) -> Element<'static,Evento> {
         primeiro.topicos.iter().enumerate()
             .filter_map(|(i,t)|ids.contains(&t.id.as_str()).then_some(i)).collect()
     };
-    let basico=indices(&["comecar","abas","preencher","formulas","formatar","tabelas","graficos"]);
-    let avancado=indices(&["dados","macros"]);
-    let outros=indices(&["arquivos","config"]);
+    let basico=indices(&["comecar","abas","preencher","formulas","formatar","tabelas","graficos","slides","elementos","texto","formas"]);
+    let avancado=indices(&["dados","macros","apresentar"]);
+    let outros=indices(&["arquivos","config","configuracoes"]);
     let outros_indices=(0..primeiro.topicos.len()).filter(|i|
         !basico.contains(i)&&!avancado.contains(i)&&!outros.contains(i)
     ).collect::<Vec<_>>();
     let group=|nav: iced::widget::Column<'static,Evento>,
                    titulo: &'static str, itens: &[usize]| {
+        if itens.is_empty(){return nav;}
         let mut nav=nav.push(rotulo_nav(titulo));
         for &i in itens {
             if let Some(t)=primeiro.topicos.get(i) {
@@ -251,7 +252,7 @@ fn home(catalogo: &Catalogo) -> Element<'static, Evento> {
             text(intro).size(13).line_height(1.45)
                 .color(tema::COR_TEXTO_MUTED()),
         ].spacing(12).width(Length::Fill),
-        ilustra_planilha(),
+        if secao.topicos.iter().any(|t|t.id=="apresentar") {ilustra_apresentacao()}else{ilustra_planilha()},
     ].spacing(18).align_y(Alignment::Center);
     let ordem=["comecar","formatar","tabelas","graficos","dados","macros","funcoes","config","atalhos"];
     let mut itens=Vec::new();
@@ -265,8 +266,16 @@ fn home(catalogo: &Catalogo) -> Element<'static, Evento> {
             });
         }
     }
+    // Inclui todos os assuntos dos outros editores, além da ordem histórica do Sheet.
+    for (i,t) in secao.topicos.iter().enumerate().filter(|(_,t)|!ordem.contains(&t.id.as_str())) {
+        itens.push(guia_do_topico(0,i,t));
+    }
     // Guia rápido abre sua explicação correspondente; não cria arquivos sem confirmação.
-    let atalhos=[
+    let apresentacao=secao.topicos.iter().any(|t|t.id=="apresentar");
+    let atalhos=if apresentacao {vec![
+        ("file-plus","Criar apresentação","comecar"),("folder-open","Abrir arquivo","arquivos"),
+        ("device-floppy","Salvar","arquivos"),("forms","Inserir forma","elementos"),("player-play","Apresentar","apresentar"),
+    ]} else {vec![
         ("file-plus","Criar planilha","comecar"),
         ("folder-open","Abrir arquivo","arquivos"),
         ("device-floppy","Salvar","arquivos"),
@@ -274,7 +283,7 @@ fn home(catalogo: &Catalogo) -> Element<'static, Evento> {
         ("filter","Importar dados","dados"),
         ("math-function","Inserir função","formulas"),
         ("table","Criar tabela","tabelas"),
-    ];
+    ]};
     let mut quick=row![].spacing(7);
     for &(icone,titulo,topico) in &atalhos {
         if let Some((i,_))=secao.topicos.iter().enumerate().find(|(_,t)|t.id==topico) {
@@ -491,4 +500,9 @@ mod testes_visual {
         assert!(icones::existe("file-plus"));
         assert!(icones::existe("search"));
     }
+}
+
+fn ilustra_apresentacao()->Element<'static,Evento>{
+    let svg=format!("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 170 115\"><rect x=\"4\" y=\"8\" width=\"162\" height=\"96\" rx=\"10\" fill=\"{}\" stroke=\"#dce4e9\"/><rect x=\"12\" y=\"18\" width=\"30\" height=\"22\" rx=\"3\" fill=\"#dce4e9\"/><rect x=\"12\" y=\"46\" width=\"30\" height=\"22\" rx=\"3\" fill=\"#dce4e9\"/><rect x=\"50\" y=\"18\" width=\"106\" height=\"76\" rx=\"5\" fill=\"#fff\"/><path d=\"M65 40h60M65 53h45M65 66h55\" stroke=\"{}\" stroke-width=\"5\" stroke-linecap=\"round\"/></svg>",if tema::escuro(){"#33363b"}else{"#f1f3f4"},tema::acento_hex());
+    svg::Svg::new(svg::Handle::from_memory(svg.into_bytes())).width(170).height(115).into()
 }

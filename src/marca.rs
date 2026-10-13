@@ -6,7 +6,7 @@ use crate::tema;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
-pub enum Produto { FeatherSheet=0, FeatherDocs=1, FeatherSlide=2, FeatherPDF=3 }
+pub enum Produto { FeatherSheet=0, FeatherDocs=1, FeatherSlide=2 }
 static PRODUTO: AtomicU8=AtomicU8::new(0);
 static COR_PERSONALIZADA: AtomicBool=AtomicBool::new(false);
 
@@ -22,7 +22,7 @@ pub fn definir_marca(produto:Produto, personalizada:bool) {
 }
 pub fn produto_atual()->Produto {
     match PRODUTO.load(Ordering::Relaxed) {
-        1=>Produto::FeatherDocs,2=>Produto::FeatherSlide,3=>Produto::FeatherPDF,_=>Produto::FeatherSheet
+        1=>Produto::FeatherDocs,2=>Produto::FeatherSlide,_=>Produto::FeatherSheet
     }
 }
 fn clarear(cor:&str,valor:f32)->String {
@@ -38,13 +38,10 @@ fn clarear(cor:&str,valor:f32)->String {
 pub fn svg_para(produto:Produto,personalizada:bool)->String {
     if !personalizada {
         return match produto {
-            Produto::FeatherSheet => SHEET_SVG.to_owned(),
-            Produto::FeatherDocs => DOCS_SVG.to_owned(),
-            Produto::FeatherSlide => SLIDE_SVG.to_owned(),
-            Produto::FeatherPDF => PENA_ORIGINAL
-                .replace("#287846", "#b84558")
-                .replace("#72aa86", "#d28f9a"),
-        };
+            Produto::FeatherSheet=>SHEET_SVG,
+            Produto::FeatherDocs=>DOCS_SVG,
+            Produto::FeatherSlide=>SLIDE_SVG,
+        }.to_owned();
     }
     let cor=tema::acento_hex();
     PENA_ORIGINAL
@@ -86,12 +83,11 @@ pub fn icone_atual(tamanho:f32)->svg::Svg<'static,iced::Theme> {
 mod testes {
     use super::*;
     #[test]
-    fn quatro_produtos_preservam_svg_vetorial_e_cores_de_fabrica() {
+    fn tres_produtos_preservam_svg_vetorial_e_cores_de_fabrica() {
         for (produto,cor) in [
             (Produto::FeatherSheet,"#287846"),
             (Produto::FeatherDocs,"#236ac7"),
             (Produto::FeatherSlide,"#d1a219"),
-            (Produto::FeatherPDF,"#b84558"),
         ] {
             let svg=svg_para(produto,false);
             assert!(svg.contains(cor));
@@ -114,7 +110,7 @@ mod testes {
     }
     #[test]
     fn renderizacao_iced_cobre_cantos_transparentes_sem_borda_preta() {
-        for produto in [Produto::FeatherSheet,Produto::FeatherDocs,Produto::FeatherSlide,Produto::FeatherPDF] {
+        for produto in [Produto::FeatherSheet,Produto::FeatherDocs,Produto::FeatherSlide] {
             let original=svg_para(produto,false);
             let rendered=svg_para_iced(produto,false);
             assert!(!original.contains("fundo-opaco-iced"),

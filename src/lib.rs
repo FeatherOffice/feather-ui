@@ -11,6 +11,7 @@ pub mod alinhamento;
 pub mod ribbon;
 pub mod dropdown;
 pub mod configuracoes;
+pub mod creditos;
 pub mod icones;
 pub mod marca;
 pub mod janelas;

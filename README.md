@@ -65,6 +65,7 @@ desfazer/refazer ficam nos motores de cada aplicativo; aqui fica só o desenho.
 | `configuracoes` | tela de configurações (lateral + cartões) |
 | `atalhos`, `acessibilidade` | atalhos de teclado e apoio à acessibilidade |
 | `efeitos_imagem` | painel de ajustes rápidos de imagem |
+| `creditos` | bloco "Colaboradores" do Sobre, igual em todos os aplicativos |
 
 ## Como usar
 
@@ -72,7 +73,7 @@ No `Cargo.toml` do aplicativo:
 
 ```toml
 [dependencies]
-feather-ui = { git = "https://github.com/FeatherOffice/feather-ui", tag = "v0.1.0" }
+feather-ui = { git = "https://github.com/FeatherOffice/feather-ui", tag = "v0.2.0" }
 ```
 
 Para desenvolver a biblioteca e o aplicativo lado a lado, aponte para a cópia

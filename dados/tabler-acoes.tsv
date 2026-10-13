@@ -64,7 +64,7 @@ player-play	FeatherSheet	icone migrado do TypeScript executar	M5 3.2v9.6L13 8Z
 window	FeatherSheet	icone migrado do TypeScript pagina	M4 2.8h5l3 3v7.4H4Z M9 2.8v3h3
 keyboard	FeatherSheet	icone migrado do TypeScript teclado	M2.2 4.4h11.6v7.2H2.2Z M4.6 6.8h.01 M7 6.8h.01 M9.4 6.8h.01 M11.8 6.8h.01 M5.4 9.4h5.2
 info-circle	FeatherSheet	icone migrado do TypeScript ajuda	M8 13.8A5.8 5.8 0 1 1 8 2.2a5.8 5.8 0 0 1 0 11.6Z M6.4 6.4a1.7 1.7 0 0 1 3.3.6c0 1.1-1.7 1.4-1.7 2.6 M8 11.6h.01
-minus	FeatherSheet	icone migrado do TypeScript seta-esquerda	M10 4l-4 4 4 4
+minus	Math	minus,subtract,less,remove	M5 12l14 0
 folder	FeatherSheet	Editor de macros VBE	M2.2 4.3h4l1.4 1.5h6.2v6.8H2.2Z
 chevron-down	FeatherSheet	Editor de macros VBE	M3.5 6L8 10.5L12.5 6
 chevron-right	FeatherSheet	Editor de macros VBE	M6 3.5L10.5 8L6 12.5
@@ -115,6 +115,12 @@ signature	Inserir	icone,insert,spreadsheet	M3 19c3-7 5 3 8-3 3-6 3 5 6 0l4-2|M14
 object	Inserir	icone,insert,spreadsheet	M5 3h9l5 5v13H5z|M14 3v5h5|M8 12h8v6H8z|M10 14h4
 equation	Inserir	icone,insert,spreadsheet	M4 6h6|M7 3v6|M14 5h6|M14 9h6|M4 15h6|M4 19h6|M14 15l6 4|M20 15l-6 4
 omega	Inserir	icone,insert,spreadsheet	M8 19h-4v-4|M16 19h4v-4|M4 15h3a8 8 0 1 1 10 0h3|M8 19v-4|M16 19v-4
+superscript	Text	superscript,exponent,power,text,format	M5 7l8 10|M5 17l8 -10|M21 11h-4l3.5 -4a1.73 1.73 0 0 0 -3.5 -2
+subscript	Text	subscript,index,chemistry,text,format	M5 7l8 10|M5 17l8 -10|M21 20h-4l3.5 -4a1.73 1.73 0 0 0 -3.5 -2
+arrow-up	Arrows	arrow,up,move,raise,top	M12 5l0 14|M18 11l-6 -6|M6 11l6 -6
+chevron-up	Arrows	chevron,up,collapse,raise	M6 15l6 -6l6 6
+grip-vertical	Interface	grip,drag,move,handle,arrastar	M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0|M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0|M9 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0|M15 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0|M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0|M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0
+arrow-right	Arrows	arrow,right,move,next	M5 12l14 0|M13 18l6 -6|M13 6l6 6
 line-height	Text	text,height,row,spacing,altura,linha	M3 8l3 -3l3 3|M3 16l3 3l3 -3|M6 5l0 14|M13 6l7 0|M13 12l7 0|M13 18l7 0
 arrow-autofit-width	Arrows	autofit,width,column,largura,coluna	M4 12v-6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6|M10 18h-7|M21 18h-7|M6 15l-3 3l3 3|M18 15l3 3l-3 3
 arrow-autofit-height	Arrows	autofit,height,row,altura,linha	M12 20h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h6|M18 4v17|M15 18l3 3l3 -3|M15 7l3 -3l3 3

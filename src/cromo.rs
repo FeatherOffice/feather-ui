@@ -5,6 +5,21 @@ use iced::{Alignment, Background, Border, Color, Element, Length};
 
 pub const BARRA_ALTURA: f32 = 42.0;
 
+/// Moldura externa comum. A margem reserva o traço para que o conteúdo
+/// opaco e os painéis sobrepostos não cubram a borda da janela.
+pub fn moldura_janela<'a, M: 'a>(conteudo: Element<'a, M>) -> Element<'a, M> {
+    container(conteudo)
+        .padding(1)
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .style(|_| container::Style {
+            background: Some(Background::Color(COR_FUNDO_JANELA())),
+            border: Border { color: COR_BORDA(), width: 1.0, ..Border::default() },
+            ..container::Style::default()
+        })
+        .into()
+}
+
 /// Os eventos continuam sendo do programa hospedeiro.
 pub struct AcoesJanela<M> {
     pub arrastar: M,
@@ -52,16 +67,18 @@ pub fn acao_icone<'a, M: Clone + 'static>(
 pub fn barra_editor<'a, M: Clone + 'static>(
     arquivo: &str,
     alterado: bool,
-    abrir_arquivos: M,
+    abrir_arquivos: Option<M>,
     acoes: impl IntoIterator<Item = Acao<M>>,
     abrir_configuracoes: M,
 ) -> Element<'a, M> {
-    let mut itens = row![
-        emblema(),
-        button(text("Arquivos").size(12.5)).padding([7, 10])
-            .style(estilo_botao_pequeno(false)).on_press(abrir_arquivos),
-        Space::with_width(6),
-    ].spacing(2).align_y(Alignment::Center);
+    // `None`: o app já tem outra entrada para o menu de arquivos (o FeatherSheet
+    // tem o botão Menu na faixa) e o botão "Arquivos" seria repetido.
+    let mut itens = row![emblema()].spacing(2).align_y(Alignment::Center);
+    if let Some(abrir) = abrir_arquivos {
+        itens = itens.push(button(text("Arquivos").size(12.5)).padding([7, 10])
+            .style(estilo_botao_pequeno(false)).on_press(abrir));
+    }
+    itens = itens.push(Space::with_width(6));
     for item in acoes {
         itens = itens.push(acao(item.icone, item.dica, item.mensagem));
     }
