@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <path d="M9 12L19 4M9 12L19 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="6" cy="7" r="3" fill="var(--ic-amber-bg, #fde68a)" stroke="var(--ic-orange, #ea580c)" stroke-width="1.8"/>
+  <circle cx="6" cy="17" r="3" fill="var(--ic-amber-bg, #fde68a)" stroke="var(--ic-orange, #ea580c)" stroke-width="1.8"/>
+  <circle cx="11" cy="12" r="1.2" fill="var(--ic-blue, #3b82f6)"/>
+</svg>

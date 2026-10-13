@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Guia superior sutil da célula -->
+  <path d="M3 4H21" stroke="var(--ic-emerald, #10b981)" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.45"/>
+  <!-- Linhas de texto alinhadas no topo -->
+  <path d="M5 8H19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5 12H14" stroke="var(--ic-blue, #3b82f6)" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<path d="M7 4H4V20H7" stroke="var(--ic-blue, #2563eb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="10" y="5" width="10" height="5.5" rx="1.5" fill="var(--ic-blue, #3b82f6)" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7"/>
+<rect x="10" y="13.5" width="10" height="5.5" rx="1.5" fill="var(--ic-emerald, #10b981)" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<circle cx="12" cy="12" r="8" fill="var(--ic-emerald, #10b981)" fill-opacity="0.12"/>
+<path d="M18.5 8.5C17.2 6.1 14.8 4.5 12 4.5C7.85 4.5 4.5 7.85 4.5 12C4.5 16.15 7.85 19.5 12 19.5C15.4 19.5 18.2 17.2 19.1 14" stroke="var(--ic-emerald, #059669)" stroke-width="2" stroke-linecap="round"/>
+<path d="M19 4.5V9H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

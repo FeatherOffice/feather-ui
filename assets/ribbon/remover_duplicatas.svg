@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<rect x="3" y="4.5" width="14" height="4" rx="1" fill="var(--ic-blue, #3b82f6)" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6"/>
+<rect x="3" y="10.5" width="14" height="4" rx="1" fill="var(--ic-red, #ef4444)" fill-opacity="0.25" stroke="var(--ic-red, #dc2626)" stroke-width="1.6"/>
+<rect x="3" y="16.5" width="14" height="4" rx="1" fill="var(--ic-blue, #3b82f6)" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6"/>
+<path d="M18.5 10.5L22 14M22 10.5L18.5 14" stroke="var(--ic-red, #dc2626)" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

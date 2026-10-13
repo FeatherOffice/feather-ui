@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <path d="M14.5 3.5L20.5 9.5L13 17L7 11L14.5 3.5Z" fill="var(--ic-purple-bg, #ede9fe)" stroke="var(--ic-purple, #7c3aed)" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M7 11L3.5 14.5C2.5 15.5 2.5 17.5 4 19C5.5 20.5 7.5 20.5 8.5 19.5L13 17" fill="var(--ic-amber, #f59e0b)" fill-opacity="0.3" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12 6L18 12" stroke="var(--ic-purple, #7c3aed)" stroke-width="1.6"/>
+</svg>

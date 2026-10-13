@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <rect x="5" y="3" width="6" height="18" rx="1.5" stroke="currentColor" stroke-width="1.7"/>
+  <rect x="14" y="3" width="5" height="18" rx="1.5" fill="var(--ic-emerald, #10b981)" fill-opacity="0.28" stroke="var(--ic-emerald, #059669)" stroke-width="1.7"/>
+  <path d="M16.5 10V14M14.5 12H18.5" stroke="var(--ic-emerald, #059669)" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

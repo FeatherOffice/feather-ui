@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <path d="M3 6.5C3 5.4 3.9 4.5 5 4.5H9.2L11.5 7H19C20.1 7 21 7.9 21 9V18.5C21 19.6 20.1 20.5 19 20.5H5C3.9 20.5 3 19.6 3 18.5V6.5Z" fill="var(--ic-amber, #f59e0b)" fill-opacity="0.2" stroke="var(--ic-amber, #d97706)" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M3 11.5H21L19.5 20.5H4.5L3 11.5Z" fill="var(--ic-amber, #f59e0b)" fill-opacity="0.3" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+</svg>

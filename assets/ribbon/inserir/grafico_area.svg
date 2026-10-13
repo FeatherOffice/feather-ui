@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<path d="M4 19V12L9 8L14 13L20 6V19H4Z" fill="var(--ic-emerald, #10b981)" fill-opacity="0.28"/>
+<path d="M4 12L9 8L14 13L20 6" stroke="var(--ic-emerald, #059669)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 4V19C4 19.55 4.45 20 5 20H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

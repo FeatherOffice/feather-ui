@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <rect x="3" y="3" width="7.5" height="7.5" rx="2" fill="var(--ic-blue, #3b82f6)" fill-opacity="0.25" stroke="var(--ic-blue, #2563eb)" stroke-width="1.7"/>
+  <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" fill="var(--ic-emerald, #10b981)" fill-opacity="0.25" stroke="var(--ic-emerald, #059669)" stroke-width="1.7"/>
+  <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" fill="var(--ic-purple, #8b5cf6)" fill-opacity="0.25" stroke="var(--ic-purple, #7c3aed)" stroke-width="1.7"/>
+  <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" fill="var(--ic-red, #ef4444)" fill-opacity="0.25" stroke="var(--ic-red, #dc2626)" stroke-width="1.7"/>
+</svg>

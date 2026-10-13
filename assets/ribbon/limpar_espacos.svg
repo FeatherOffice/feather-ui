@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <path d="M14 4L20 10L11 19H5L3 17L14 4Z" fill="var(--ic-pink, #f43f5e)" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M8 11L13 16" stroke="var(--ic-pink, #e11d48)" stroke-width="1.8"/>
+  <path d="M14 19H21" stroke="var(--ic-blue, #2563eb)" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

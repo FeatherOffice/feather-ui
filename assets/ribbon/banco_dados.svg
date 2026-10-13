@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<ellipse cx="12" cy="6" rx="7.5" ry="3" fill="var(--ic-blue, #3b82f6)" fill-opacity="0.28" stroke="var(--ic-blue, #2563eb)" stroke-width="1.8"/>
+<path d="M4.5 6V12C4.5 13.66 7.86 15 12 15C16.14 15 19.5 13.66 19.5 12V6" stroke="currentColor" stroke-width="1.8"/>
+<path d="M4.5 12V18C4.5 19.66 7.86 21 12 21C16.14 21 19.5 19.66 19.5 18V12" fill="var(--ic-blue, #3b82f6)" fill-opacity="0.12" stroke="currentColor" stroke-width="1.8"/>
+<circle cx="16" cy="11.5" r="1" fill="var(--ic-emerald, #10b981)"/>
+<circle cx="16" cy="17.5" r="1" fill="var(--ic-emerald, #10b981)"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <rect x="4" y="4" width="16" height="16" rx="2" fill="var(--ic-blue-bg, #dbeafe)" fill-opacity="0.4" stroke="currentColor" stroke-width="1.8"/>
+  <path d="M12 4V20M4 12H20" stroke="var(--ic-blue, #3b82f6)" stroke-width="1.6" stroke-dasharray="2 2"/>
+  <path d="M4 20H20" stroke="var(--ic-emerald, #10b981)" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

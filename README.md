@@ -37,7 +37,8 @@ desfazer/refazer ficam nos motores de cada aplicativo; aqui fica só o desenho.
 ## Decisões de projeto
 
 - **Ícones embutidos no executável.** O catálogo (`dados/tabler-acoes.tsv`,
-  no estilo [Tabler Icons](https://tabler.io/icons)) entra com `include_str!`
+  no estilo [Tabler Icons](https://tabler.io/icons)) e os SVGs coloridos
+  de `assets/ribbon/` entram com `include_str!`
   e vira SVG em memória. Nada é baixado nem lido do disco em tempo de
   execução: funciona sem rede e sai igual no Linux e no Windows.
 - **Cores como funções, não constantes** (`COR_PAINEL()`, `COR_TEXTO()`…):
@@ -49,6 +50,34 @@ desfazer/refazer ficam nos motores de cada aplicativo; aqui fica só o desenho.
 - **Sem dependências além do Iced**, para compilar rápido e não arrastar
   bibliotecas em C para os aplicativos.
 - **Privacidade**: nenhum componente faz acesso à rede nem telemetria.
+
+Os SVGs do Ribbon aceitam o nome do arquivo sem `.svg` (por exemplo,
+`aumentar_decimais`) e os aliases em `src/icones_ribbon.rs`. As chaves já
+usadas pelas GUIs, como `clipboard`, `copy`, `bold` e `align-left`, passam
+a usar o pacote colorido. `currentColor` acompanha o tema, e as variáveis
+CSS são resolvidas antes da renderização, com uma paleta própria para o
+tema escuro.
+`icone_colorido` preserva a paleta dos novos desenhos.
+
+A lista `FALTANTES` (desenhos dedicados aos nomes que o FeatherSheet pede,
+como `check`, `border-all` e `font-color`) é consultada primeiro; a lista
+`SISTEMA` traz a barra de topo, a aba Exibir, a barra de fórmulas, linhas e
+colunas, colar especial e funções rápidas.
+
+Controles que desenham seu próprio SVG ou usam texto precisam adotar as
+chaves do catálogo no aplicativo consumidor para usar esses desenhos.
+Os nomes antigos `plus` e `edit` também recebem os novos desenhos de
+inserção e formatação de células, respectivamente.
+
+A aba Inserir incorpora os 35 desenhos em `assets/ribbon/inserir/`, mantendo
+as chamadas com `pivot-table`, `photo`, `chart-line`, `slicer`, `text-box`
+e os demais nomes antigos. `table` usa o novo desenho de tabela; o desenho
+anterior de formatação continua disponível como `formatar_tabela`.
+Quando duas ações usavam a mesma chave, ambas continuam exibindo o mesmo
+ícone: `edit` mantém formatação de célula, `photo` representa imagens,
+`link` representa inserir link e `trash` representa excluir célula.
+Os desenhos específicos adicionais estão disponíveis como `editar_dinamica`,
+`efeitos_imagem`, `abrir_link` e `remover_link`.
 
 ## O que tem
 
