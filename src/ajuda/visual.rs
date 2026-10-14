@@ -308,7 +308,16 @@ fn home(catalogo: &Catalogo) -> Element<'static, Evento> {
         quick,
     ].spacing(17).width(Length::Fill).into()
 }
-fn ver_topico(topico: &Topico) -> Element<'static, Evento> {
+fn botao_copiar(texto: &str, copiado: Option<&str>) -> Element<'static, Evento> {
+    let feito = copiado == Some(texto);
+    crate::componentes::botao_icone(
+        icones::icone(if feito { "check" } else { "copy" }, 16.),
+        if feito { "Copiado" } else { "Copiar" },
+        Some(Evento::Copiar(texto.to_owned())),
+        feito,
+    )
+}
+fn ver_topico(topico: &Topico, copiado: Option<&str>) -> Element<'static, Evento> {
     let mut body=column![texto_negrito(topico.titulo.clone(),23.)].spacing(13);
     for linha in &topico.linhas {
         let elemento:Element<'static,Evento>=match linha {
@@ -320,7 +329,10 @@ fn ver_topico(topico: &Topico) -> Element<'static, Evento> {
                 text(tecla.clone()).size(13.).font(Font::MONOSPACE)
                     .width(Length::FillPortion(2)),
             ].spacing(9).into(),
-            Linha::Exemplo(s)=>container(text(s.clone()).size(13.).font(Font::MONOSPACE))
+            Linha::Exemplo(s)=>container(row![
+                    text(s.clone()).size(13.).font(Font::MONOSPACE).width(Length::Fill),
+                    botao_copiar(s, copiado),
+                ].spacing(10).align_y(Alignment::Start))
                 .padding(14).width(Length::Fill)
                 .style(|_|container::Style {
                     background:Some(Background::Color(tema::COR_PAINEL_FAIXA())),
@@ -364,7 +376,7 @@ fn conteudo(catalogo:&Catalogo,estado:&Estado)->Element<'static,Evento>{
     if let Some(topico)=estado.topico.and_then(|t|secao.topicos.get(t)) {
         return column![
             text(secao.titulo.clone()).size(12.).color(tema::COR_TEXTO_MUTED()),
-            ver_topico(topico),
+            ver_topico(topico, estado.copiado.as_deref()),
         ].spacing(13).into();
     }
     let guias=secao.topicos.iter().enumerate()

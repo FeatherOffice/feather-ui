@@ -39,6 +39,9 @@ pub struct Estado {
     /// None é a página de introdução; Some(index) é um tópico.
     pub topico: Option<usize>,
     pub busca: String,
+    /// Último texto copiado pelo botão Copiar; o botão mostra "Copiado" enquanto
+    /// o texto continuar igual (some ao navegar ou em `Evento::LimparCopiado`).
+    pub copiado: Option<String>,
 }
 #[derive(Clone, Debug)]
 pub enum Evento {
@@ -47,6 +50,12 @@ pub enum Evento {
     Buscar(String),
     Anterior,
     Proximo,
+    /// Pede ao aplicativo que ponha este texto na área de transferência
+    /// (o componente não conhece a janela). `Estado::atualizar` só marca o
+    /// botão como "Copiado"; quem trata o evento faz a cópia de verdade.
+    Copiar(String),
+    /// Tira o retorno "Copiado" (o aplicativo agenda depois de um instante).
+    LimparCopiado,
 }
 
 /// Campo de busca da janela F1 (Ctrl+F focaliza este campo).
@@ -110,7 +119,12 @@ impl Catalogo {
 
 impl Estado {
     pub fn atualizar(&mut self, evento: Evento, catalogo: &Catalogo) {
+        if !matches!(evento, Evento::Copiar(_) | Evento::LimparCopiado) {
+            self.copiado = None;
+        }
         match evento {
+            Evento::Copiar(texto) => self.copiado = Some(texto),
+            Evento::LimparCopiado => self.copiado = None,
             Evento::IrSecao(s) if s < catalogo.secoes.len() => {
                 self.secao = s;
                 self.topico = None;

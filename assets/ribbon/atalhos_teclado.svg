@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <rect x="2.5" y="5" width="19" height="14" rx="2.5" fill="var(--ic-paper, #ffffff)" stroke="currentColor" stroke-width="1.6"/>
+  <circle cx="6.5" cy="9" r="1" fill="var(--ic-blue, #3b82f6)"/>
+  <circle cx="10" cy="9" r="1" fill="var(--ic-blue, #3b82f6)"/>
+  <circle cx="14" cy="9" r="1" fill="var(--ic-blue, #3b82f6)"/>
+  <circle cx="17.5" cy="9" r="1" fill="var(--ic-amber, #d97706)"/>
+  <circle cx="6.5" cy="12.5" r="1" fill="var(--ic-blue, #3b82f6)"/>
+  <circle cx="10" cy="12.5" r="1" fill="var(--ic-blue, #3b82f6)"/>
+  <circle cx="14" cy="12.5" r="1" fill="var(--ic-blue, #3b82f6)"/>
+  <circle cx="17.5" cy="12.5" r="1" fill="var(--ic-amber, #d97706)"/>
+  <line x1="8" y1="16" x2="16" y2="16" stroke="var(--ic-amber, #d97706)" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

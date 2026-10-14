@@ -276,6 +276,32 @@ mod testes_ui012 {
     }
 
     #[test]
+    fn icones_novos_da_faixa_resolvem_para_o_colorido() {
+        // Nomes genericos de dialogos/menus: so a chave em portugues leva ao colorido.
+        // list, window, keyboard e layout-grid também aparecem fora da faixa.
+        const GENERICOS: [&str; 12] = [
+            "informacao", "inspecao", "relogio", "menos", "guia_funcoes", "fechar",
+            "seta_direita", "seta_esquerda", "recentes", "componentes", "atalhos_teclado",
+            "desmesclar_celulas",
+        ];
+        let novos = &ribbon::FALTANTES[16..];
+        assert_eq!(novos.len(), 24);
+        for &(chave, alias, original) in novos {
+            assert_eq!(svg_ribbon(chave), Some(original), "chave pt: {chave}");
+            assert!(original.contains("viewBox=\"0 0 24 24\""));
+            let desenho = svg_embutido(chave);
+            assert!(!desenho.contains("var(") && !desenho.contains("currentColor"));
+            if GENERICOS.contains(&chave) {
+                assert_eq!(alias, chave, "apelido generico indevido: {chave}");
+            } else {
+                assert_eq!(svg_ribbon(alias), Some(original), "alias: {alias}");
+                assert_eq!(svg_embutido(alias), desenho);
+                assert_ne!(svg_embutido(alias), svg_tabler(alias));
+            }
+        }
+    }
+
+    #[test]
     fn fallback_de_icone_inexistente_e_local_deterministico() {
         let ausente = svg_embutido("nao-existe-UI012");
         assert!(ausente.contains("<path d=\"M12 5v14M5 12h14\"/>"));
