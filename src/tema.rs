@@ -116,6 +116,15 @@ pub fn COR_CROMO() -> Color { par("#f4f6f8", "#202327") }
 #[allow(non_snake_case)]
 /// O corpo da faixa (onde ficam os grupos de botões).
 pub fn COR_CROMO_2() -> Color { par("#eaedf1", "#26292e") }
+/// Vermelho de erro (texto, borda de campo inválido, ícone de alerta). AA sobre `COR_PAINEL()`.
+#[allow(non_snake_case)]
+pub fn COR_ERRO() -> Color { par("#d93025", "#f28b82") }
+/// Véu atrás de diálogo modal: preto semitransparente, mais denso no tema escuro.
+#[allow(non_snake_case)]
+pub fn COR_VEU() -> Color { Color { a: if escuro() { 0.60 } else { 0.45 }, ..Color::BLACK } }
+/// Cor da sombra de diálogo (usar com `offset (0, 6)` e `blur_radius 22`).
+#[allow(non_snake_case)]
+pub fn COR_SOMBRA() -> Color { Color { a: 0.28, ..Color::BLACK } }
 #[allow(non_snake_case)]
 pub fn COR_HOVER_AZUL() -> Color { mistura(COR_PAINEL(), COR_AZUL_ACENTO(), if escuro() { 0.32 } else { 0.20 }) }
 #[allow(non_snake_case)]
@@ -574,4 +583,19 @@ mod testes_toggle_suite {
         assert_eq!(desligado.background_border_color, COR_BORDA());
         assert_eq!(ligado.foreground, crate::acessibilidade::texto_sobre(COR_AZUL_ACENTO()));
     }
+}
+
+/// Botão "fechar" de diálogo: ícone `x` (15 px), estilo pequeno, dica "Fechar".
+/// Fica no canto direito do cabeçalho; `msg` é a mensagem de fechamento.
+/// Já existia o mesmo padrão embutido em `configuracoes::tela`; este é o
+/// helper avulso para os diálogos dos aplicativos.
+pub fn botao_fechar<'a, M: Clone + 'a + 'static>(msg: M) -> iced::Element<'a, M> {
+    use iced::widget::tooltip;
+    let botao = button(crate::icones::icone("x", 15.0))
+        .padding([5, 7])
+        .style(estilo_botao_pequeno(false))
+        .on_press(msg);
+    tooltip(botao, iced::widget::text("Fechar").size(12), tooltip::Position::Bottom)
+        .style(estilo_dica)
+        .into()
 }

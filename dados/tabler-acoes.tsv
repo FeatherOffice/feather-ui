@@ -124,3 +124,11 @@ arrow-right	Arrows	arrow,right,move,next	M5 12l14 0|M13 18l6 -6|M13 6l6 6
 line-height	Text	text,height,row,spacing,altura,linha	M3 8l3 -3l3 3|M3 16l3 3l3 -3|M6 5l0 14|M13 6l7 0|M13 12l7 0|M13 18l7 0
 arrow-autofit-width	Arrows	autofit,width,column,largura,coluna	M4 12v-6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6|M10 18h-7|M21 18h-7|M6 15l-3 3l3 3|M18 15l3 3l-3 3
 arrow-autofit-height	Arrows	autofit,height,row,altura,linha	M12 20h-6a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h6|M18 4v17|M15 18l3 3l3 -3|M15 7l3 -3l3 3
+check	System	check,checkmark,tick,done,yes,ok,confirm,success,approve,correct,complete,confirmar,ok	M5 12l5 5l10 -10
+circle	Shapes	round,dot,shape,geometry,ellipse,ring,radio,record,circle,circulo,bolinha	M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0
+circle-filled	Shapes	round,dot,shape,geometry,filled,radio,bullet,circle,circulo,bolinha	M7 3.34a10 10 0 1 1 -4.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 4.995 -8.336z
+arrow-left	Arrows	direction,west,previous,back,go-back,return,pointer,navigation,arrow,left,voltar	M5 12l14 0|M5 12l6 6|M5 12l6 -6
+arrows-vertical	Arrows	up-down,height,resize,expand,pointer,navigation,direction,arrows,vertical,altura	M8 7l4 -4l4 4|M8 17l4 4l4 -4|M12 3l0 18
+arrow-down-right	Arrows	direction,southeast,diagonal,diagonal-arrow,corner,pointer,navigation,arrow,down,right	M7 7l10 10|M17 8l0 9l-9 0
+arrow-up-right	Arrows	direction,northeast,diagonal,diagonal-arrow,external-link,open-in-new,trend,pointer,navigation,arrow,right	M17 7l-10 10|M8 7l9 0l0 9
+alert-triangle	System	warning,caution,danger,error,hazard,exclamation,attention,risk,notice,alert,triangle,aviso,alerta	M12 9v4|M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0|M12 16h.01

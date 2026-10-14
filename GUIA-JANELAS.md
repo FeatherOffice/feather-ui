@@ -248,6 +248,13 @@ de tela larga limitado a ~1180 e centralizado.
 | `COR_AZUL_ACENTO()` | cor de destaque escolhida pelo usuário (botão primário, link) |
 | `COR_AZUL_FUNDO()` | item selecionado, fundo de ícone de cartão |
 | `COR_HOVER()` | passar o mouse |
+| `COR_ERRO()` | texto/borda de erro e campo inválido (vermelho legível nos dois temas) |
+| `COR_VEU()` | véu atrás de diálogo modal (preto, alfa 0,45 claro / 0,60 escuro) |
+| `COR_SOMBRA()` | sombra de diálogo (preto, alfa 0,28; `offset (0, 6)`, `blur_radius 22`) |
+
+**Botão fechar de diálogo**: `feather_ui::tema::botao_fechar(msg)` devolve o
+botão pequeno com o ícone `x` (15) e a dica "Fechar"; colocar no canto direito
+do cabeçalho do diálogo. Não montar o botão à mão com `×`.
 
 Estilos prontos em `feather_ui::tema`: `estilo_botao_primario`,
 `estilo_botao_secundario`, `estilo_botao_pequeno(ativo)`, `estilo_dica`,

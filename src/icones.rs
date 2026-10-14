@@ -87,8 +87,14 @@ fn svg_tabler(nome: &str) -> String {
     // Os ícones originais do FeatherSheet usam viewBox 16 × 16 e traço 1.4.
     // Os Tabler da suíte continuam em 24 × 24, sem alterar Slide/Docs.
     let (view_box, traco) = if original_sheet { (16, 1.4) } else { (24, 2.0) };
+    // Variante `-filled` do Tabler: preenchida e sem contorno.
+    let (preenchimento, contorno) = if nome.ends_with("-filled") {
+        ("#808080", "none")
+    } else {
+        ("none", "#808080")
+    };
     format!(
-        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 {view_box} {view_box}\" fill=\"none\" stroke=\"#808080\" stroke-width=\"{traco}\" stroke-linecap=\"round\" stroke-linejoin=\"round\">{paths}</svg>"
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 {view_box} {view_box}\" fill=\"{preenchimento}\" stroke=\"{contorno}\" stroke-width=\"{traco}\" stroke-linecap=\"round\" stroke-linejoin=\"round\">{paths}</svg>"
     )
 }
 
@@ -291,9 +297,22 @@ mod testes_ui012 {
             }
         }
         assert_eq!(
-            hash, 0x1defa33f44d25564,
+            hash, 0x7c6e372611eca27,
             "o desenho SVG embutido mudou; revisar visual Linux/Windows antes de atualizar o baseline",
         );
+    }
+
+    #[test]
+    fn icones_de_dialogo_existem_e_sao_monocromaticos() {
+        for nome in [
+            "check", "circle", "circle-filled", "arrow-left", "arrows-vertical",
+            "arrow-down-right", "arrow-up-right", "alert-triangle", "x",
+        ] {
+            assert!(existe(nome), "{nome}");
+            assert_eq!(svg_embutido(nome), svg_tabler(nome), "{nome} deve ser o Tabler puro");
+        }
+        assert!(svg_tabler("circle-filled").contains("fill=\"#808080\""));
+        assert!(svg_tabler("circle").contains("fill=\"none\""));
     }
 
     #[test]
