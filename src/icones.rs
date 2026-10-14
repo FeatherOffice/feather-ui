@@ -323,7 +323,7 @@ mod testes_ui012 {
             }
         }
         assert_eq!(
-            hash, 0x7c6e372611eca27,
+            hash, 0x8500fa1083b90464,
             "o desenho SVG embutido mudou; revisar visual Linux/Windows antes de atualizar o baseline",
         );
     }

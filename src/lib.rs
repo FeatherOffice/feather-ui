@@ -17,6 +17,8 @@ pub mod marca;
 pub mod monitor;
 pub mod janelas;
 pub mod tema;
+/// Aba Desenhar: camada de tinta e controles das canetas (sem motor).
+pub mod tinta;
 pub mod acessibilidade;
 
 pub mod seletor_cor;

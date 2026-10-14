@@ -96,6 +96,7 @@ Os desenhos específicos adicionais estão disponíveis como `editar_dinamica`,
 | `atalhos`, `acessibilidade` | atalhos de teclado e apoio à acessibilidade |
 | `efeitos_imagem` | painel de ajustes rápidos de imagem |
 | `creditos` | bloco "Colaboradores" do Sobre, igual em todos os aplicativos |
+| `tinta` | aba Desenhar: camada transparente de tinta (captura caneta/mouse, desenha, devolve traço/apagar/laço em coordenadas do documento) e os controles das canetas; o motor dos traços fica no `featheroffice-drawing` |
 
 ## Como usar
 
