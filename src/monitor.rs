@@ -510,7 +510,7 @@ impl Monitor {
         ].spacing(11).align_y(Alignment::Center);
         let grafico = canvas::Canvas::new(GraficoMemoria { amostras: &self.historico, janela: self.amostras })
             .width(Length::Fill)
-            .height(Length::Fixed(245.0));
+            .height(Length::Fill);
         let grafico_base = container(column![
             titulo,
             grafico,
@@ -519,9 +519,10 @@ impl Monitor {
             } else {
                 "Cada barra representa uma amostra de memória do processo (RSS)."
             }).size(11).color(COR_TEXTO_MUTED()),
-        ].spacing(15))
-            .padding(19)
+        ].spacing(12))
+            .padding(16)
             .width(Length::Fill)
+            .height(Length::Fill)
             .style(painel);
         let grafico: Element<'a, M> = if self.menu_amostras {
             let mut opcoes = column![].spacing(2).padding(5);
@@ -551,11 +552,13 @@ impl Monitor {
                     Space::with_height(Length::Fixed(57.0)),
                     row![Space::with_width(Length::Fill), menu],
                 ]
-            ].width(Length::Fill).into()
+            ].width(Length::Fill).height(Length::Fill).into()
         } else {
             grafico_base.into()
         };
-        scrollable(column![cartoes, grafico, banner_informativo()].spacing(15).padding([1, 0]))
+        // Sem rolagem: o histórico ocupa o que sobra da janela abaixo dos
+        // cartões, e encolhe com ela.
+        column![cartoes, grafico, banner_informativo()].spacing(12)
             .height(Length::Fill)
             .into()
     }
@@ -742,9 +745,9 @@ fn cartao_destaque<'a, M: 'static>(
         linha = linha.push(rosca(pct, cor));
     }
     container(linha)
-        .padding([19, 18])
+        .padding([14, 16])
         .width(Length::Fill)
-        .height(Length::Fixed(149.0))
+        .height(Length::Fixed(118.0))
         .style(painel)
         .into()
 }
