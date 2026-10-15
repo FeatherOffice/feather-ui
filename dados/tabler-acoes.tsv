@@ -143,3 +143,6 @@ layout-align-middle	Design	align-middle,align,middle,vertical-center,alignment,l
 layout-align-top	Design	align-top,align,top,alignment,layout,position,design	M4 4l16 0|M9 10a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -8
 indent-decrease	Text	indent,outdent,decrease-indent,recuo,diminuir,text,format	M20 6l-7 0|M20 12l-9 0|M20 18l-7 0|M8 8l-4 4l4 4
 indent-increase	Text	indent,increase-indent,recuo,aumentar,text,format	M20 6l-7 0|M20 12l-9 0|M20 18l-7 0|M4 8l4 4l-4 4
+copy-plus	Text	copy,plus,duplicate,clone,add	M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666|M4.012 16.737a2 2 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1|M11 14h6|M14 11v6
+link-off	Text	link,off,unlink,remove,hyperlink,hiperlink,remover,limpar	M9 15l3 -3m2 -2l1 -1|M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464|M3 3l18 18|M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463
+underline-double	Text	underline,double,sublinhado,duplo,text,formatting,font,desenhado-no-estilo-tabler	M7 4v5a5 5 0 0 0 10 0v-5|M5 18h14|M5 21h14

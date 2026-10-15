@@ -28,6 +28,7 @@ pub mod caneta;
 pub mod acessibilidade;
 
 pub mod seletor_cor;
+pub mod campo_numero;
 
 pub mod formatacao;
 
