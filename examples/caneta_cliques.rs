@@ -21,7 +21,8 @@
 //! pressão mas SEM botão (o toque não virou clique); na coluna escura
 //! (core), branco com o botão 1 apertado.
 //!
-//! `cargo run --example caneta_cliques -- 20` (segundos; padrão 20).
+//! `cargo run --example caneta_cliques -- 120` (segundos; padrão 120). A
+//! janela abre perto do ponteiro (no monitor em uso).
 //! `cargo run --example caneta_cliques -- --autoteste`: arrasto sintético
 //! pelo XTest na coluna esquerda, confere se chegou ButtonPress e traço.
 //! Encoste o MOUSE e depois a CANETA nas três colunas e compare.
@@ -38,6 +39,7 @@ mod linux {
     use std::collections::HashMap;
     use std::time::{Duration, Instant};
     use x11rb::connection::Connection;
+    use x11rb::properties::{WmSizeHints, WmSizeHintsSpecification};
     use x11rb::protocol::xinput::{self, ConnectionExt as _, DeviceClassData, XIEventMask};
     use x11rb::protocol::xproto::{
         AtomEnum, CapStyle, ChangeGCAux, ConnectionExt as _, CoordMode, CreateGCAux, CreateWindowAux, EventMask,
@@ -125,7 +127,7 @@ mod linux {
         let args: Vec<String> = std::env::args().skip(1).collect();
         let autoteste = args.iter().any(|a| a == "--autoteste");
         let segundos: u64 =
-            args.iter().find_map(|s| s.parse().ok()).unwrap_or(if autoteste { 3 } else { 20 });
+            args.iter().find_map(|s| s.parse().ok()).unwrap_or(if autoteste { 3 } else { 120 });
         if let Err(e) = executar(segundos, autoteste) {
             println!("Falhou: {e}");
         }
@@ -147,14 +149,19 @@ mod linux {
         println!("Dispositivos:");
         let mut mapa = dispositivos(&conn);
 
-        // Janela principal com duas filhas: esquerda XInput2, direita core.
+        // Janela principal com três filhas (XInput2 mestres, XInput2 todos, core).
+        // Nasce onde o ponteiro está: com dois monitores o GNOME a abria no
+        // outro e a pessoa não achava a janela dentro do tempo.
+        let ponteiro_raiz = conn.query_pointer(raiz)?.reply()?;
+        let px = (i32::from(ponteiro_raiz.root_x) - i32::from(LARGURA) / 2).max(0);
+        let py = (i32::from(ponteiro_raiz.root_y) - i32::from(ALTURA) / 2).max(0);
         let principal = conn.generate_id()?;
         conn.create_window(
             0,
             principal,
             raiz,
-            0,
-            0,
+            i16::try_from(px).unwrap_or(0),
+            i16::try_from(py).unwrap_or(0),
             LARGURA,
             ALTURA,
             0,
@@ -162,6 +169,11 @@ mod linux {
             0,
             &CreateWindowAux::new().background_pixel(preto),
         )?;
+        // USPosition: o gerenciador de janelas respeita a posição pedida.
+        let mut dicas = WmSizeHints::new();
+        dicas.position = Some((WmSizeHintsSpecification::UserSpecified, px, py));
+        dicas.set_normal_hints(&conn, principal)?;
+        println!("Janela em ({px}, {py}) na raiz, perto do ponteiro ({}, {}).", ponteiro_raiz.root_x, ponteiro_raiz.root_y);
         let titulo = format!("Escreva com a CANETA e com o MOUSE — {segundos} s");
         let net_wm_name = conn.intern_atom(false, b"_NET_WM_NAME")?.reply()?.atom;
         let utf8 = conn.intern_atom(false, b"UTF8_STRING")?.reply()?.atom;
