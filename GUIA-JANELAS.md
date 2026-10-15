@@ -186,6 +186,75 @@ nova usa os tokens de `feather_ui::tema` (regra 3).
 padding 20–24, título 17–18 semibold, uma frase de explicação apagada,
 campos em coluna com `spacing(10)`, botões na última linha alinhados à direita
 (`Cancelar` secundário, ação primária por último). Enter confirma, Esc cancela.
+Não montar à mão: usar o **diálogo interno** abaixo.
+
+### 5.1 Diálogo interno (`feather_ui::dialogo`)
+
+Todo painel sobreposto **dentro** da janela do aplicativo (gerenciador de
+nomes, estatísticas, inserir link, classificar…) usa `feather_ui::dialogo::Dialogo`.
+Ele decide sozinho título, botão fechar, véu, posição, rolagem e rodapé; o
+aplicativo só passa o corpo.
+
+```
+┌───────────────────────────────────────────────┐  topo = fim da faixa (+8)
+│ [ic 19] Título 17 semibold               [x]  │  x = ícone Tabler, dica "Fechar (Esc)"
+│ subtítulo 12 apagado (opcional)               │
+│                                               │
+│ corpo: altura pelo conteúdo, rola acima do    │  teto = min(altura_maxima, janela − topo − 12)
+│ teto (barra de rolagem fina, `tema::rolagem`) │
+│                                               │
+│ [esquerda]           [Secundário] [Primário]  │  rodapé opcional, à direita
+└───────────────────────────────────────────────┘
+        véu COR_VEU() atrás; clicar nele fecha
+```
+
+```rust
+use feather_ui::dialogo::{self as dlg, Dialogo};
+
+Dialogo::new("Estatísticas da seleção", corpo)
+    .icone("chart-bar")                       // opcional, do catálogo
+    .subtitulo("Intervalo B7 · somente leitura")
+    .ao_fechar(Msg::Fechar)                   // mostra o x e fecha ao clicar fora
+    .largura(460.0)                           // padrão 480 (faixa 420–640)
+    .topo(fim_da_faixa)                       // padrão 96
+    .altura_janela(janela.height)             // o teto respeita a janela
+    .largura_janela(janela.width)             // encolhe em janela estreita
+    .rodape_esquerda(dlg::botao_secundario("Ir para", Some(Msg::Ir)))
+    .secundario("Cancelar", Some(Msg::Fechar))
+    .primario("Aplicar", pode.then_some(Msg::Aplicar)) // None = desabilitado
+    .sobre(base)                              // ou .painel() só o painel (testes)
+```
+
+Opções: `.clique_fora_fecha(false)` (pergunta que exige resposta),
+`.veu(false)`, `.sem_rolagem()` (corpo com área rolável própria),
+`.nao_modal().a_direita()` (sem véu e sem bloquear a tela, encostado à
+direita: para diálogos em que a pessoa **clica na planilha** para preencher
+campos, como Atingir meta, Tabela de dados e Cenários).
+
+Peças para o corpo (todas com tokens do tema):
+
+| Peça | Uso |
+|---|---|
+| `dlg::secao("Visão geral")` | título de seção: CAIXA ALTA 10,5 semibold apagado |
+| `dlg::linha_rotulo_valor(rótulo, valor)` | uma linha compacta: rótulo apagado à esquerda, valor à direita |
+| `dlg::grade_rotulo_valor(pares, colunas)` | pares rótulo/valor em 1–3 colunas dentro de um bloco discreto |
+| `dlg::aviso_vazio(texto)` | `info-circle` + frase num bloco: **um** aviso no lugar de várias seções vazias |
+| `dlg::aviso(ícone, texto)` | o mesmo com outro ícone (`alert-triangle` para confirmar exclusão) |
+| `dlg::estilo_bloco` | fundo `COR_PAINEL_FAIXA`, borda suave, raio 9: agrupa linhas, tabelas, listas |
+| `dlg::botao_primario/secundario(rótulo, Option<Msg>)` | botões avulsos no estilo do rodapé |
+
+Regras do diálogo interno:
+
+- **Um fechar só**: o `x` do cabeçalho. Nada de botão "Fechar" no rodapé
+  repetindo o `x`; o rodapé tem só ações (Aplicar, OK, Mostrar…).
+- **Altura pelo conteúdo**, nunca fixa: um diálogo de uma frase é pequeno.
+- **Não cobre a faixa**: o topo fica logo abaixo dela (no FeatherSheet,
+  `App::dialogo(titulo, corpo)` já posiciona e limita pela janela).
+- **Seção sem dado não aparece**; se nada tem dado, um `aviso_vazio` só.
+- **Números com rótulo**: grade rótulo/valor, valor à direita e perto do
+  rótulo (largura 420–560), nunca linhas espaçadas numa janela larga; sem
+  número para a conta (média de nada), mostrar `—`, não `0`.
+- **Esc** fecha: o aplicativo trata a tecla e manda a mesma mensagem do `x`.
 
 ---
 

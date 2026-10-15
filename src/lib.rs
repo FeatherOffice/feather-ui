@@ -6,6 +6,8 @@ pub mod atalhos;
 /// Ajuda pesquisável e navegável nativa, compartilhada entre Docs/Sheet/Slide.
 pub mod ajuda;
 pub mod cromo;
+/// Diálogo interno padrão (painel sobreposto com véu, título, fechar e rodapé).
+pub mod dialogo;
 pub mod componentes;
 pub mod alinhamento;
 pub mod ribbon;
