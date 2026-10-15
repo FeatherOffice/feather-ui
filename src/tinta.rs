@@ -18,6 +18,7 @@ use iced::{Alignment, Background, Border, Color, Element, Length, Padding, Point
 use crate::componentes::{botao_grande, botao_pequeno, grupo_faixa_compacto};
 use crate::icones::icone;
 use crate::tema::*;
+pub use crate::caneta::FontePressao;
 
 // ------------------------------------------------------------------ estado
 
@@ -390,14 +391,26 @@ pub struct TracoTela {
     pub reto: bool,
     /// Ponta quadrada (marca-texto) em vez de redonda.
     pub marca_texto: bool,
+    /// Contorno de largura variável (polígonos fechados no documento,
+    /// calculados pelo motor). Vazio = linha de `espessura` constante.
+    pub contorno: Vec<Vec<Point>>,
 }
 
-/// Ponto capturado (documento) com o instante desde o início do traço.
+/// Ponto capturado (documento) com o instante desde o início do traço e
+/// a pressão **real** da caneta (`0..=1`, crua, sem curva), quando a
+/// [`FontePressao`] da camada a casou com o ponto. `None` = mouse/dedo.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PontoCaptura {
     pub x: f32,
     pub y: f32,
     pub tempo_ms: u32,
+    pub pressao: Option<f32>,
+}
+
+impl PontoCaptura {
+    pub const fn novo(x: f32, y: f32, tempo_ms: u32) -> Self {
+        Self { x, y, tempo_ms, pressao: None }
+    }
 }
 
 /// O que a camada devolve ao app, sempre em coordenadas do documento.
@@ -430,6 +443,16 @@ pub struct Camada<M> {
     pub pena: Option<(Color, f32)>,
     /// Ids realçados (seleção do laço).
     pub selecionados: Vec<u64>,
+    /// De onde vem a pressão real (mesa). `None` = só mouse/toque.
+    pub fonte_pressao: Option<FontePressao>,
+    /// Curva da prévia ao vivo: `(mínimo, gama)`, a mesma que o app usa
+    /// ao gravar (`espessura × (mínimo + (1 − mínimo) × pressão^gama)`).
+    pub curva_previa: (f32, f32),
+    /// Sem pressão real: prévia da largura pela velocidade (unidades do
+    /// documento por ms em que chega ao mais fino). `None` = largura fixa.
+    pub velocidade_previa: Option<f32>,
+    /// Indicador ao vivo da pressão durante o traço (modo de teste).
+    pub mostrar_pressao: bool,
     pub mapear: fn(EventoCamada) -> M,
 }
 
@@ -443,6 +466,10 @@ impl<M> Camada<M> {
             ferramenta: None,
             pena: None,
             selecionados: Vec::new(),
+            fonte_pressao: None,
+            curva_previa: (0.2, 1.0),
+            velocidade_previa: None,
+            mostrar_pressao: false,
             mapear,
         }
     }
@@ -461,6 +488,34 @@ impl<M> Camada<M> {
 #[derive(Debug, Default)]
 pub struct EstadoCamada {
     gesto: Option<Gesto>,
+    /// Diagnóstico: movimentos do cursor desde o último evento anotado.
+    movimentos_soltos: u32,
+}
+
+/// Diagnóstico da caneta: anota os eventos crus de mouse e toque que a
+/// camada recebe (movimentos só contados, para não inundar o diário).
+fn anotar_evento_cru(evento: &canvas::Event, estado: &mut EstadoCamada, cursor: mouse::Cursor) {
+    if !crate::caneta::diagnostico_ligado() {
+        return;
+    }
+    let descricao = match evento {
+        canvas::Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+            estado.movimentos_soltos += 1;
+            return;
+        }
+        canvas::Event::Mouse(mouse::Event::WheelScrolled { .. }) => return,
+        canvas::Event::Mouse(e) => format!("mouse {e:?}"),
+        canvas::Event::Touch(e) => format!("toque {e:?}"),
+        _ => return,
+    };
+    let movimentos = std::mem::take(&mut estado.movimentos_soltos);
+    let posicao = cursor.position().map(|p| format!("({:.0}, {:.0})", p.x, p.y)).unwrap_or_else(|| "fora".into());
+    crate::caneta::anotar(|| format!("[camada] {descricao} no cursor {posicao}; {movimentos} movimentos antes"));
+}
+
+/// Número com vírgula decimal (pt-BR), 2 casas.
+fn decimal_br(v: f32) -> String {
+    format!("{v:.2}").replace('.', ",")
 }
 
 #[derive(Debug)]
@@ -468,7 +523,14 @@ struct Gesto {
     ferramenta: Ferramenta,
     inicio: Instant,
     pontos: Vec<PontoCaptura>,
+    /// Quando cada ponto chegou (para casar a pressão de novo ao soltar:
+    /// a amostra da mesa pode chegar um pouco depois do evento do Iced).
+    instantes: Vec<Instant>,
     ultimo_tela: Point,
+    /// Botão que começou o traço (a ponta da caneta pode chegar como outro botão).
+    botao: Option<mouse::Button>,
+    /// Movimentos recebidos desde o último registro do diagnóstico.
+    movimentos: u32,
 }
 
 impl EstadoCamada {
@@ -479,13 +541,21 @@ impl EstadoCamada {
 }
 
 impl<M> Camada<M> {
-    fn comecar(&self, estado: &mut EstadoCamada, p_tela: Point, ferramenta: Ferramenta) -> Option<M> {
+    fn pressao_agora(&self, instante: Instant) -> Option<f32> {
+        self.fonte_pressao.as_ref().and_then(|f| f.pressao_em(instante))
+    }
+
+    fn comecar(&self, estado: &mut EstadoCamada, p_tela: Point, ferramenta: Ferramenta, botao: Option<mouse::Button>) -> Option<M> {
         let doc = self.transformacao.para_documento(p_tela);
+        let agora = Instant::now();
         estado.gesto = Some(Gesto {
             ferramenta,
-            inicio: Instant::now(),
-            pontos: vec![PontoCaptura { x: doc.x, y: doc.y, tempo_ms: 0 }],
+            inicio: agora,
+            pontos: vec![PontoCaptura { x: doc.x, y: doc.y, tempo_ms: 0, pressao: self.pressao_agora(agora) }],
+            instantes: vec![agora],
             ultimo_tela: p_tela,
+            botao,
+            movimentos: 0,
         });
         ferramenta.apaga().then(|| (self.mapear)(EventoCamada::Apagar {
             ferramenta,
@@ -495,14 +565,19 @@ impl<M> Camada<M> {
     }
 
     fn mover(&self, estado: &mut EstadoCamada, p_tela: Point) -> Option<M> {
+        let fonte = self.fonte_pressao.as_ref();
         let gesto = estado.gesto.as_mut()?;
+        gesto.movimentos += 1;
         if gesto.ultimo_tela.distance(p_tela) < 0.75 {
             return None;
         }
         gesto.ultimo_tela = p_tela;
         let doc = self.transformacao.para_documento(p_tela);
-        let tempo_ms = gesto.inicio.elapsed().as_millis().min(u128::from(u32::MAX)) as u32;
-        gesto.pontos.push(PontoCaptura { x: doc.x, y: doc.y, tempo_ms });
+        let agora = Instant::now();
+        let tempo_ms = agora.duration_since(gesto.inicio).as_millis().min(u128::from(u32::MAX)) as u32;
+        let pressao = fonte.and_then(|f| f.pressao_em(agora));
+        gesto.pontos.push(PontoCaptura { x: doc.x, y: doc.y, tempo_ms, pressao });
+        gesto.instantes.push(agora);
         gesto.ferramenta.apaga().then(|| (self.mapear)(EventoCamada::Apagar {
             ferramenta: gesto.ferramenta,
             ponto: doc,
@@ -511,7 +586,28 @@ impl<M> Camada<M> {
     }
 
     fn terminar(&self, estado: &mut EstadoCamada) -> Option<M> {
-        let gesto = estado.gesto.take()?;
+        let mut gesto = estado.gesto.take()?;
+        // Casa a pressão de novo com tudo o que já chegou da mesa.
+        if let Some(fonte) = &self.fonte_pressao {
+            for (p, &t) in gesto.pontos.iter_mut().zip(&gesto.instantes) {
+                if let Some(pr) = fonte.pressao_em(t) {
+                    p.pressao = Some(pr);
+                }
+            }
+        }
+        crate::caneta::anotar(|| {
+            let com: Vec<f32> = gesto.pontos.iter().filter_map(|p| p.pressao).collect();
+            let resumo = if com.is_empty() {
+                "sem pressão real".to_string()
+            } else {
+                let min = com.iter().copied().fold(f32::INFINITY, f32::min);
+                let max = com.iter().copied().fold(0.0f32, f32::max);
+                let med = com.iter().sum::<f32>() / com.len() as f32;
+                format!("pressão em {} de {} pontos: mín {min:.2} méd {med:.2} máx {max:.2}", com.len(), gesto.pontos.len())
+            };
+            format!("[camada] fim do gesto ({:?}, botão {:?}): {} pontos, {} movimentos; {resumo}",
+                gesto.ferramenta, gesto.botao, gesto.pontos.len(), gesto.movimentos)
+        });
         let evento = match gesto.ferramenta {
             f if f.desenha() => EventoCamada::TracoTerminado { ferramenta: f, pontos: gesto.pontos },
             f if f.apaga() => EventoCamada::ApagarFim,
@@ -527,6 +623,65 @@ impl<M> Camada<M> {
     }
 }
 
+impl<M> Camada<M> {
+    /// Fração da espessura em cada ponto da prévia: pressão real pela
+    /// `curva_previa`; sem ela, pela velocidade (se ligada). `None` = fixa.
+    fn fatores_previa(&self, pontos: &[PontoCaptura]) -> Option<Vec<f32>> {
+        let (minimo, gama) = self.curva_previa;
+        let minimo = minimo.clamp(0.0, 1.0);
+        let fator = |p: f32| minimo + (1.0 - minimo) * p.clamp(0.0, 1.0);
+        if pontos.iter().any(|p| p.pressao.is_some()) {
+            let gama = if gama.is_finite() { gama.clamp(0.1, 10.0) } else { 1.0 };
+            return Some(pontos.iter().map(|p| p.pressao.map_or(1.0, |pr| fator(pr.clamp(0.0, 1.0).powf(gama)))).collect());
+        }
+        let vf = self.velocidade_previa?;
+        if pontos.len() < 2 {
+            return None;
+        }
+        let mut suave: Option<f32> = None;
+        let mut saida = Vec::with_capacity(pontos.len());
+        for s in pontos.windows(2) {
+            let dt = s[1].tempo_ms.saturating_sub(s[0].tempo_ms).max(1) as f32;
+            let v = (s[1].x - s[0].x).hypot(s[1].y - s[0].y) / dt;
+            let atual = suave.map_or(v, |a| a + 0.35 * (v - a));
+            suave = Some(atual);
+            saida.push(fator(crate::caneta::previa_pressao_da_velocidade(atual, vf)));
+        }
+        saida.insert(0, saida[0]);
+        Some(saida)
+    }
+
+    /// "pressão 0,63" (mesa), "velocidade 0,45" (sem mesa) ou "sem pressão".
+    fn desenhar_indicador(&self, f: &mut Frame, gesto: &Gesto) {
+        let ultimo = gesto.pontos.last().copied();
+        let texto = match ultimo.and_then(|p| p.pressao) {
+            Some(p) => format!("pressão {}", decimal_br(p)),
+            None => match self.fatores_previa(&gesto.pontos).and_then(|v| v.last().copied()) {
+                Some(fator) => format!("sem mesa: largura pela velocidade {}", decimal_br(fator)),
+                None => "sem pressão (mouse)".into(),
+            },
+        };
+        let origem = self.fonte_pressao.as_ref().map(|f| f.descricao()).filter(|d| !d.is_empty());
+        let linha = match origem {
+            Some(o) => format!("{texto}  ·  {o}"),
+            None => texto,
+        };
+        let largura = linha.chars().count() as f32 * 6.6 + 16.0;
+        f.fill_rectangle(Point::new(6.0, 6.0), Size::new(largura, 22.0), COR_PAINEL());
+        f.stroke(
+            &Path::rectangle(Point::new(6.0, 6.0), Size::new(largura, 22.0)),
+            Stroke::default().with_color(COR_BORDA()).with_width(1.0),
+        );
+        f.fill_text(canvas::Text {
+            content: linha,
+            position: Point::new(14.0, 11.0),
+            color: COR_TEXTO(),
+            size: 12.0.into(),
+            ..canvas::Text::default()
+        });
+    }
+}
+
 impl<M> Program<M> for Camada<M> {
     type State = EstadoCamada;
 
@@ -535,13 +690,19 @@ impl<M> Program<M> for Camada<M> {
             estado.gesto = None;
             return (event::Status::Ignored, None);
         };
+        anotar_evento_cru(&evento, estado, cursor);
         let area = self.area_em(bounds);
         let local = |p: Point| Point::new(p.x - bounds.x, p.y - bounds.y);
         match evento {
-            canvas::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+            // A ponta da caneta chega como botão esquerdo (XWayland, Windows)
+            // ou, conforme o compositor, como outro botão (BTN_TOUCH/BTN_STYLUS
+            // = `Other(n)`): os dois começam o traço. Direito/meio/voltar não.
+            canvas::Event::Mouse(mouse::Event::ButtonPressed(botao @ (mouse::Button::Left | mouse::Button::Other(_))))
+                if estado.gesto.is_none() =>
+            {
                 match cursor.position_in(bounds) {
                     Some(p) if area.contains(p) => {
-                        let msg = self.comecar(estado, p, ferramenta);
+                        let msg = self.comecar(estado, p, ferramenta, Some(botao));
                         (event::Status::Captured, msg)
                     }
                     _ => (event::Status::Ignored, None),
@@ -551,14 +712,16 @@ impl<M> Program<M> for Camada<M> {
                 let msg = self.mover(estado, local(position));
                 (event::Status::Captured, msg)
             }
-            canvas::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) if estado.gesto.is_some() => {
+            canvas::Event::Mouse(mouse::Event::ButtonReleased(botao))
+                if estado.gesto.as_ref().is_some_and(|g| g.botao == Some(botao)) =>
+            {
                 let msg = self.terminar(estado);
                 (event::Status::Captured, msg)
             }
             canvas::Event::Touch(touch::Event::FingerPressed { position, .. }) => {
                 let p = local(position);
-                if area.contains(p) && bounds.contains(position) {
-                    let msg = self.comecar(estado, p, ferramenta);
+                if area.contains(p) && bounds.contains(position) && estado.gesto.is_none() {
+                    let msg = self.comecar(estado, p, ferramenta, None);
                     (event::Status::Captured, msg)
                 } else {
                     (event::Status::Ignored, None)
@@ -589,7 +752,11 @@ impl<M> Program<M> for Camada<M> {
                 Point::new(q.x - area.x, q.y - area.y)
             };
             for traco in &self.tracos {
-                desenhar_traco(f, &traco.pontos, ajuste, traco.cor, traco.espessura * t.escala, traco.reto, traco.marca_texto);
+                if traco.contorno.is_empty() {
+                    desenhar_traco(f, &traco.pontos, ajuste, traco.cor, traco.espessura * t.escala, traco.reto, traco.marca_texto);
+                } else {
+                    desenhar_contorno(f, &traco.contorno, ajuste, traco.cor);
+                }
             }
             if !self.selecionados.is_empty() {
                 let pts = self
@@ -610,7 +777,14 @@ impl<M> Program<M> for Camada<M> {
                 let pts: Vec<Point> = gesto.pontos.iter().map(|p| Point::new(p.x, p.y)).collect();
                 if gesto.ferramenta.desenha() {
                     if let Some((cor, espessura)) = self.pena {
-                        desenhar_traco(f, &pts, ajuste, cor, espessura * t.escala, false, gesto.ferramenta == Ferramenta::MarcaTexto);
+                        let marca = gesto.ferramenta == Ferramenta::MarcaTexto;
+                        match (!marca).then(|| self.fatores_previa(&gesto.pontos)).flatten() {
+                            Some(fatores) => desenhar_previa_variavel(f, &pts, &fatores, ajuste, cor, espessura * t.escala),
+                            None => desenhar_traco(f, &pts, ajuste, cor, espessura * t.escala, false, marca),
+                        }
+                    }
+                    if self.mostrar_pressao {
+                        self.desenhar_indicador(f, gesto);
                     }
                 } else if gesto.ferramenta == Ferramenta::Laco && pts.len() > 1 {
                     let caminho = Path::new(|b| {
@@ -696,6 +870,38 @@ fn desenhar_traco(f: &mut Frame, pontos: &[Point], ajuste: impl Fn(Point) -> Poi
             .with_line_cap(if marca { LineCap::Square } else { LineCap::Round })
             .with_line_join(LineJoin::Round),
     );
+}
+
+/// Contorno de largura variável (polígonos do motor), preenchido com a
+/// regra não-zero (os pedaços se somam).
+fn desenhar_contorno(f: &mut Frame, poligonos: &[Vec<Point>], ajuste: impl Fn(Point) -> Point, cor: Color) {
+    let caminho = Path::new(|b| {
+        for pol in poligonos.iter().filter(|p| p.len() >= 3) {
+            b.move_to(ajuste(pol[0]));
+            for &p in &pol[1..] {
+                b.line_to(ajuste(p));
+            }
+            b.close();
+        }
+    });
+    f.fill(&caminho, cor);
+}
+
+/// Prévia ao vivo com largura variável: um trecho reto por par de pontos,
+/// pontas redondas, largura média dos dois pontos.
+fn desenhar_previa_variavel(f: &mut Frame, pontos: &[Point], fatores: &[f32], ajuste: impl Fn(Point) -> Point, cor: Color, largura: f32) {
+    let pts: Vec<Point> = pontos.iter().map(|&p| ajuste(p)).collect();
+    if pts.len() == 1 {
+        f.fill(&Path::circle(pts[0], (largura * fatores[0] / 2.0).max(0.25)), cor);
+        return;
+    }
+    for (i, s) in pts.windows(2).enumerate() {
+        let l = largura * (fatores[i] + fatores[i + 1]) / 2.0;
+        f.stroke(
+            &Path::line(s[0], s[1]),
+            Stroke::default().with_color(cor).with_width(l.max(0.5)).with_line_cap(LineCap::Round),
+        );
+    }
 }
 
 /// Widget pronto: a camada ocupando todo o espaço (para pôr num `stack`).
@@ -839,9 +1045,72 @@ mod testes {
             let _: Element<'_, Evento> = sobrepor_menu(text("base").into(), &e, 50.0, 120.0, Size::new(1280.0, 800.0), |ev| ev);
             let tracos = vec![TracoTela {
                 id: 1, pontos: vec![Point::ORIGIN, Point::new(5.0, 5.0)], cor: Color::BLACK,
-                espessura: 2.0, reto: false, marca_texto: false,
+                espessura: 2.0, reto: false, marca_texto: false, contorno: Vec::new(),
+            }, TracoTela {
+                id: 2, pontos: vec![Point::ORIGIN], cor: Color::BLACK, espessura: 2.0, reto: false, marca_texto: false,
+                contorno: vec![vec![Point::ORIGIN, Point::new(5.0, 0.0), Point::new(5.0, 5.0)]],
             }];
             let _: Element<'_, Msg> = camada(Camada::nova(tracos, Transformacao::default(), Msg::Tinta));
         }
+    }
+
+    #[test]
+    fn ponta_da_caneta_como_outro_botao_tambem_risca() {
+        // No Wayland a ponta pode chegar como BTN_TOUCH/BTN_STYLUS (`Other`).
+        let mut camada = Camada::nova(Vec::new(), Transformacao::default(), Msg::Tinta);
+        camada.ferramenta = Some(Ferramenta::Caneta(0));
+        let mut estado = EstadoCamada::default();
+        let toque = mouse::Button::Other(0x14a);
+        let (s, _) = camada.update(&mut estado, mouse(mouse::Event::ButtonPressed(toque)), bounds(), em(150.0, 100.0));
+        assert_eq!(s, event::Status::Captured);
+        camada.update(&mut estado, mouse(mouse::Event::CursorMoved { position: Point::new(180.0, 120.0) }), bounds(), em(180.0, 120.0));
+        // Soltar outro botão não encerra; soltar o mesmo, sim.
+        let (_, m) = camada.update(&mut estado, mouse(mouse::Event::ButtonReleased(mouse::Button::Left)), bounds(), em(180.0, 120.0));
+        assert!(m.is_none() && estado.em_gesto());
+        let (_, m) = camada.update(&mut estado, mouse(mouse::Event::ButtonReleased(toque)), bounds(), em(180.0, 120.0));
+        assert!(matches!(m, Some(Msg::Tinta(EventoCamada::TracoTerminado { ref pontos, .. })) if pontos.len() == 2));
+        // Botão direito nunca começa traço.
+        let (s, _) = camada.update(&mut estado, mouse(mouse::Event::ButtonPressed(mouse::Button::Right)), bounds(), em(150.0, 100.0));
+        assert_eq!(s, event::Status::Ignored);
+    }
+
+    #[test]
+    fn pressao_da_mesa_e_casada_com_cada_ponto_e_mouse_fica_sem() {
+        let fonte = FontePressao::nova();
+        let mut camada = Camada::nova(Vec::new(), Transformacao::default(), Msg::Tinta);
+        camada.ferramenta = Some(Ferramenta::Caneta(0));
+        camada.fonte_pressao = Some(fonte.clone());
+        let mut estado = EstadoCamada::default();
+        // Mouse: nenhuma amostra recente da mesa.
+        camada.update(&mut estado, mouse(mouse::Event::ButtonPressed(mouse::Button::Left)), bounds(), em(150.0, 100.0));
+        camada.update(&mut estado, mouse(mouse::Event::CursorMoved { position: Point::new(160.0, 100.0) }), bounds(), em(160.0, 100.0));
+        let (_, m) = camada.update(&mut estado, mouse(mouse::Event::ButtonReleased(mouse::Button::Left)), bounds(), em(160.0, 100.0));
+        let Some(Msg::Tinta(EventoCamada::TracoTerminado { pontos, .. })) = m else { panic!("traço") };
+        assert!(pontos.iter().all(|p| p.pressao.is_none()));
+        // Caneta: a amostra chega junto (ou logo depois) do evento do Iced.
+        fonte.registrar(Instant::now(), 0.3);
+        camada.update(&mut estado, mouse(mouse::Event::ButtonPressed(mouse::Button::Left)), bounds(), em(150.0, 100.0));
+        camada.update(&mut estado, mouse(mouse::Event::CursorMoved { position: Point::new(170.0, 100.0) }), bounds(), em(170.0, 100.0));
+        fonte.registrar(Instant::now(), 0.8);
+        let (_, m) = camada.update(&mut estado, mouse(mouse::Event::ButtonReleased(mouse::Button::Left)), bounds(), em(170.0, 100.0));
+        let Some(Msg::Tinta(EventoCamada::TracoTerminado { pontos, .. })) = m else { panic!("traço") };
+        assert!(pontos.iter().all(|p| p.pressao.is_some()), "{pontos:?}");
+        assert_eq!(pontos.last().unwrap().pressao, Some(0.8), "casado de novo ao soltar");
+    }
+
+    #[test]
+    fn previa_da_largura_segue_a_pressao_ou_a_velocidade() {
+        let mut camada = Camada::nova(Vec::new(), Transformacao::default(), Msg::Tinta);
+        camada.curva_previa = (0.2, 1.0);
+        let pc = |x: f32, t: u32, p: Option<f32>| PontoCaptura { x, y: 0.0, tempo_ms: t, pressao: p };
+        let f = camada.fatores_previa(&[pc(0.0, 0, Some(0.0)), pc(1.0, 1, Some(1.0))]).unwrap();
+        assert!((f[0] - 0.2).abs() < 1e-6 && (f[1] - 1.0).abs() < 1e-6);
+        // Sem pressão e sem velocidade ligada: largura fixa.
+        assert!(camada.fatores_previa(&[pc(0.0, 0, None), pc(1.0, 10, None)]).is_none());
+        camada.velocidade_previa = Some(2.0);
+        let devagar = camada.fatores_previa(&[pc(0.0, 0, None), pc(1.0, 10, None)]).unwrap();
+        let rapido = camada.fatores_previa(&[pc(0.0, 0, None), pc(30.0, 3, None)]).unwrap();
+        assert!(devagar[1] > rapido[1]);
+        assert_eq!(decimal_br(0.63), "0,63");
     }
 }

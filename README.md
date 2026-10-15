@@ -97,6 +97,7 @@ Os desenhos específicos adicionais estão disponíveis como `editar_dinamica`,
 | `efeitos_imagem` | painel de ajustes rápidos de imagem |
 | `creditos` | bloco "Colaboradores" do Sobre, igual em todos os aplicativos |
 | `tinta` | aba Desenhar: camada transparente de tinta (captura caneta/mouse, desenha, devolve traço/apagar/laço em coordenadas do documento) e os controles das canetas; o motor dos traços fica no `featheroffice-drawing` |
+| `caneta` | pressão da caneta para a camada de tinta: `FontePressao` (amostras com instante, casamento por tempo), XInput2 no Linux pelo `x11rb` (Rust puro; só eventos crus dos dispositivos com eixo de pressão, nunca teclado; sob Wayland o app precisa abrir pelo XWayland, ver `deve_usar_x11`/`mesas_conectadas`: no Wayland o winit 0.30 não recebe o clique da caneta), WM_POINTER no Windows, e o diário de diagnóstico. Exemplo: `cargo run --example caneta_diag -- 15` |
 
 ## Como usar
 

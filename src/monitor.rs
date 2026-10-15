@@ -247,6 +247,11 @@ impl Monitor {
         self.console.registrar(nivel, origem, mensagem);
     }
 
+    /// O console da sessão (para conferir o que foi registrado).
+    pub fn console(&self) -> &Console {
+        &self.console
+    }
+
     /// A aba aberta: 0 Memória, 1 Console, 2 Métricas.
     pub fn aba(&self) -> usize {
         self.aba

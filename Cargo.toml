@@ -1,6 +1,6 @@
 [package]
 name = "feather-ui"
-version = "0.2.5"
+version = "0.2.6"
 description = "Interface compartilhada da suíte FeatherOffice: tema, ícones, marca e componentes Iced"
 authors = ["FeatherOffice"]
 edition = "2021"
@@ -11,3 +11,16 @@ publish = false
 
 [dependencies]
 iced = { version = "0.13", features = ["svg", "canvas", "auto-detect-theme"] }
+
+# Pressão da caneta (src/caneta.rs). Linux: XInput2 em Rust puro (x11rb,
+# conexão própria, sem libxcb/libXi). Windows: WM_POINTER pela API do sistema.
+[target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android")))'.dependencies]
+x11rb = { version = "0.13", features = ["xinput"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_UI_Shell",
+    "Win32_UI_Input_Pointer",
+    "Win32_UI_WindowsAndMessaging",
+] }
