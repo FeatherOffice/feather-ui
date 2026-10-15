@@ -19,6 +19,8 @@ pub mod janelas;
 pub mod tema;
 /// Aba Desenhar: camada de tinta e controles das canetas (sem motor).
 pub mod tinta;
+/// Contorno das letras pela fonte do Iced (texto artístico / WordArt).
+pub mod texto_contorno;
 /// Pressão da caneta (XInput2 no Linux, WM_POINTER no Windows) e diagnóstico.
 pub mod caneta;
 pub mod acessibilidade;
