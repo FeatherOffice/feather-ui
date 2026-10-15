@@ -28,3 +28,10 @@ windows-sys = { version = "0.59", features = [
 # Só o exemplo caneta_cliques (autoteste com clique sintético pelo XTest).
 [target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android")))'.dev-dependencies]
 x11rb = { version = "0.13", features = ["xinput", "xtest"] }
+
+# Só o exemplo caneta_wayland (mesa pelo protocolo tablet-v2, sem Iced/winit).
+# wayland-client usa o backend Rust puro do wayland-backend (sem libwayland C).
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client"] }
+libc = "0.2"
