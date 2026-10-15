@@ -986,6 +986,9 @@ name = "feather-ui"
 version = "0.2.6"
 dependencies = [
  "iced",
+ "libc",
+ "wayland-client",
+ "wayland-protocols",
  "windows-sys 0.59.0",
  "x11rb",
 ]

@@ -141,3 +141,5 @@ icons	Shapes	icons,icon-set,shapes,symbols,design,graphics,assets,library	M3 6.5
 layout-align-bottom	Design	align-bottom,align,bottom,alignment,layout,position,design	M4 20l16 0|M9 6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -8
 layout-align-middle	Design	align-middle,align,middle,vertical-center,alignment,layout,position,design	M4 12l5 0|M15 12l5 0|M9 8a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -8
 layout-align-top	Design	align-top,align,top,alignment,layout,position,design	M4 4l16 0|M9 10a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -8
+indent-decrease	Text	indent,outdent,decrease-indent,recuo,diminuir,text,format	M20 6l-7 0|M20 12l-9 0|M20 18l-7 0|M8 8l-4 4l4 4
+indent-increase	Text	indent,increase-indent,recuo,aumentar,text,format	M20 6l-7 0|M20 12l-9 0|M20 18l-7 0|M4 8l4 4l-4 4

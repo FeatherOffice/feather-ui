@@ -17,9 +17,12 @@
 //! Também o **diagnóstico**: com ele ligado, a camada e os leitores anotam
 //! os eventos crus num diário que o aplicativo mostra (Console F12).
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+
+use iced::futures::channel::mpsc;
+use iced::{Point, Rectangle, Size};
 
 /// Distância máxima no tempo entre o ponto do Iced e a amostra de pressão.
 /// Os dois chegam por conexões diferentes ao mesmo servidor, quase juntos.
@@ -38,7 +41,60 @@ pub struct AmostraPressao {
 struct Interno {
     amostras: Mutex<VecDeque<AmostraPressao>>,
     descricao: Mutex<String>,
+    /// Janela X do aplicativo (0 = desconhecida): a posição da ponta é
+    /// lida relativa a ela.
+    janela_x11: AtomicU32,
+    /// Tamanho lógico (Iced) da janela, para converter pixel físico em lógico.
+    tamanho_logico: Mutex<Option<Size>>,
+    /// Onde a camada de tinta captura, em coordenadas lógicas da janela.
+    /// `None` = modo desenho desligado.
+    zona_tinta: Mutex<Option<ZonaTinta>>,
+    /// Toques da caneta lidos pelo XInput2, ainda não entregues ao app.
+    toques: Mutex<VecDeque<ToqueCaneta>>,
+    /// Acorda a assinatura do Iced quando chega toque.
+    despertar: Mutex<Option<mpsc::UnboundedSender<()>>>,
+    /// Instante em que a ponta encostou (None = levantada).
+    contato: Mutex<Option<Instant>>,
+    /// Instante do último encostar (fica depois de levantar).
+    ultimo_contato: Mutex<Option<Instant>>,
+    /// Último sinal da caneta: toque, levantar ou clique sintético. Diz se
+    /// um clique que o Iced recebeu veio dela ou do mouse.
+    ultimo_sinal: Mutex<Option<Instant>>,
 }
+
+/// Onde a camada de tinta está, em coordenadas lógicas da janela: a área
+/// que captura e a origem do widget (os pontos da camada são relativos a ela).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ZonaTinta {
+    pub area: Rectangle,
+    pub origem: Point,
+}
+
+/// Fase de um toque da ponta da caneta lido por fora do Iced.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FaseToque {
+    Encostou,
+    Moveu,
+    Levantou,
+}
+
+/// Um evento da ponta lido pelo XInput2: posição em coordenadas **lógicas
+/// da janela** (as mesmas do Iced), pressão crua `0..=1` (quando veio) e
+/// se começou dentro da zona da camada de tinta (`na_tinta`; vale o do
+/// encostar para o toque inteiro).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ToqueCaneta {
+    pub fase: FaseToque,
+    pub posicao: Point,
+    pub pressao: Option<f32>,
+    pub instante: Instant,
+    pub na_tinta: bool,
+    /// Ponta de borracha da caneta (dispositivo "eraser"), não a de escrever.
+    pub borracha: bool,
+}
+
+/// Teto da fila de toques (se o app não consumir, os mais antigos saem).
+const MAX_TOQUES: usize = 4096;
 
 /// Fonte compartilhada de pressão (barata de clonar). Quem lê o
 /// dispositivo chama [`FontePressao::registrar`]; a camada pergunta
@@ -110,6 +166,188 @@ impl FontePressao {
             *d = texto.into();
         }
     }
+
+    // ---------------------------------------------- toques fora do Iced
+
+    /// Janela X do aplicativo (o id que o winit criou). Sem ela a leitura
+    /// não sabe onde a ponta está e não gera toques para a tinta.
+    pub fn definir_janela_x11(&self, janela: u32) {
+        self.interno.janela_x11.store(janela, Ordering::Relaxed);
+    }
+
+    pub fn janela_x11(&self) -> Option<u32> {
+        Some(self.interno.janela_x11.load(Ordering::Relaxed)).filter(|&j| j != 0)
+    }
+
+    /// Tamanho lógico da janela (o que o Iced informa no redimensionar).
+    pub fn definir_tamanho_logico(&self, tamanho: Size) {
+        if let Ok(mut t) = self.interno.tamanho_logico.lock() {
+            *t = Some(tamanho);
+        }
+    }
+
+    pub fn tamanho_logico(&self) -> Option<Size> {
+        *self.interno.tamanho_logico.lock().ok()?
+    }
+
+    /// Onde a camada de tinta captura (coordenadas lógicas da janela);
+    /// `None` fora do modo desenho. A camada atualiza ao desenhar.
+    pub fn definir_zona_tinta(&self, zona: Option<ZonaTinta>) {
+        if let Ok(mut z) = self.interno.zona_tinta.lock() {
+            if *z != zona {
+                *z = zona;
+            }
+        }
+    }
+
+    pub fn zona_tinta(&self) -> Option<ZonaTinta> {
+        *self.interno.zona_tinta.lock().ok()?
+    }
+
+    /// A leitura por fora entrega toques (há janela X conhecida)? Com ela,
+    /// a camada deixa a ponta da caneta só com esse caminho.
+    pub fn entrega_toques(&self) -> bool {
+        self.janela_x11().is_some()
+    }
+
+    /// Guarda um toque e acorda a assinatura do Iced.
+    pub fn enviar_toque(&self, toque: ToqueCaneta) {
+        if let Ok(mut fila) = self.interno.toques.lock() {
+            if fila.len() >= MAX_TOQUES {
+                fila.pop_front();
+            }
+            fila.push_back(toque);
+        }
+        self.marcar_sinal();
+        match toque.fase {
+            FaseToque::Encostou => self.marcar_contato(toque.instante),
+            FaseToque::Levantou => self.marcar_soltura(),
+            FaseToque::Moveu => {}
+        }
+        if let Ok(mut d) = self.interno.despertar.lock() {
+            if d.as_ref().is_some_and(|tx| tx.unbounded_send(()).is_err()) {
+                *d = None;
+            }
+        }
+    }
+
+    /// Ponta encostou sem posição conhecida (sem janela): só o estado.
+    pub fn marcar_contato(&self, instante: Instant) {
+        if let Ok(mut c) = self.interno.contato.lock() {
+            *c = Some(instante);
+        }
+        if let Ok(mut u) = self.interno.ultimo_contato.lock() {
+            *u = Some(instante);
+        }
+    }
+
+    pub fn marcar_soltura(&self) {
+        if let Ok(mut c) = self.interno.contato.lock() {
+            *c = None;
+        }
+    }
+
+    /// Tira os toques pendentes (em ordem).
+    pub fn recolher_toques(&self) -> Vec<ToqueCaneta> {
+        self.interno.toques.lock().map(|mut f| f.drain(..).collect()).unwrap_or_default()
+    }
+
+    /// A ponta está encostada agora (pela leitura por fora)?
+    pub fn em_contato(&self) -> bool {
+        self.interno.contato.lock().is_ok_and(|c| c.is_some())
+    }
+
+    /// Algum sinal da caneta (toque ou clique sintético) agora.
+    pub fn marcar_sinal(&self) {
+        if let Ok(mut u) = self.interno.ultimo_sinal.lock() {
+            *u = Some(Instant::now());
+        }
+    }
+
+    /// A caneta está em uso: encostada, ou deu sinal há até `janela`. Um
+    /// clique que o Iced recebe fora disso é do mouse.
+    pub fn caneta_em_uso(&self, janela: Duration) -> bool {
+        self.em_contato()
+            || self.interno.ultimo_sinal.lock().is_ok_and(|u| u.is_some_and(|u| u.elapsed() <= janela))
+    }
+
+    /// A ponta encostou em algum momento a partir de `t`?
+    pub fn encostou_desde(&self, t: Instant) -> bool {
+        self.interno.ultimo_contato.lock().is_ok_and(|u| u.is_some_and(|u| u >= t))
+    }
+
+    fn registrar_despertar(&self, tx: mpsc::UnboundedSender<()>) {
+        if let Ok(mut d) = self.interno.despertar.lock() {
+            *d = Some(tx);
+        }
+    }
+}
+
+/// Assinatura do Iced com os toques da caneta lidos por fora (lotes, em
+/// ordem). Uma por fonte; o app transforma cada lote numa mensagem.
+pub fn assinatura_toques(fonte: &FontePressao) -> iced::Subscription<Vec<ToqueCaneta>> {
+    use iced::futures::{SinkExt as _, StreamExt as _};
+    let fonte = fonte.clone();
+    let id = Arc::as_ptr(&fonte.interno) as usize;
+    iced::Subscription::run_with_id(
+        ("feather-ui-caneta-toques", id),
+        iced::stream::channel(64, move |mut saida: mpsc::Sender<Vec<ToqueCaneta>>| async move {
+            let (tx, mut rx) = mpsc::unbounded();
+            fonte.registrar_despertar(tx);
+            // Toque que chegou antes de a assinatura existir também vai.
+            let pendentes = fonte.recolher_toques();
+            if !pendentes.is_empty() && saida.send(pendentes).await.is_err() {
+                return;
+            }
+            while rx.next().await.is_some() {
+                let lote = fonte.recolher_toques();
+                if !lote.is_empty() && saida.send(lote).await.is_err() {
+                    return;
+                }
+            }
+        }),
+    )
+}
+
+/// Cliques de mouse que o Iced recebeu (o app conta todos, capturados ou
+/// não). A leitura por fora compara antes e depois de um toque para saber
+/// se o clique da caneta chegou ao aplicativo.
+static CLIQUES_ICED: AtomicU64 = AtomicU64::new(0);
+
+/// O app chama a cada `mouse::Event::ButtonPressed` (ver [`ouvir_cliques_iced`]).
+pub fn registrar_clique_iced() {
+    CLIQUES_ICED.fetch_add(1, Ordering::Relaxed);
+}
+
+pub fn cliques_iced() -> u64 {
+    CLIQUES_ICED.load(Ordering::Relaxed)
+}
+
+/// Assinatura que conta os cliques do Iced (nunca gera mensagem).
+pub fn ouvir_cliques_iced<M: Send + 'static>() -> iced::Subscription<M> {
+    iced::event::listen_with(|evento, _status, _janela| {
+        if let iced::Event::Mouse(iced::mouse::Event::ButtonPressed(_)) = evento {
+            registrar_clique_iced();
+        }
+        None
+    })
+}
+
+/// Pixel físico da janela X → coordenada lógica do Iced, pela razão entre
+/// as larguras física e lógica. Sem tamanho lógico (ou inválido), 1:1.
+pub fn fisico_para_logico(x: f32, y: f32, largura_fisica: f32, largura_logica: Option<f32>) -> Point {
+    let escala = match largura_logica {
+        Some(l) if l > 0.0 && largura_fisica > 0.0 && l.is_finite() => l / largura_fisica,
+        _ => 1.0,
+    };
+    Point::new(x * escala, y * escala)
+}
+
+/// O toque que levantou precisa de clique sintético? Só quando não foi
+/// para a tinta e o Iced não recebeu clique nenhum desde que a ponta
+/// encostou (o servidor X não entregou o botão da caneta à janela).
+pub fn precisa_clique_sintetico(na_tinta: bool, cliques_ao_encostar: u64, cliques_agora: u64) -> bool {
+    !na_tinta && cliques_agora == cliques_ao_encostar
 }
 
 fn casar_com_distancia(amostras: &[AmostraPressao], t: Instant, janela: Duration) -> Option<(Duration, f32)> {
@@ -286,11 +524,16 @@ pub fn recolher_diagnostico() -> Vec<String> {
 /// o aviso de troca de dispositivos (`XI_HierarchyChanged`).
 #[cfg(all(unix, not(target_os = "macos"), not(target_os = "android")))]
 pub mod x11 {
-    use super::{anotar, normalizar_valuator, FontePressao};
-    use std::time::Instant;
-    use x11rb::connection::Connection;
+    use super::{
+        anotar, cliques_iced, fisico_para_logico, normalizar_valuator, precisa_clique_sintetico, FaseToque, FontePressao,
+        ToqueCaneta,
+    };
+    use std::sync::Arc;
+    use std::time::{Duration, Instant};
+    use x11rb::connection::{Connection, RequestConnection as _};
     use x11rb::protocol::xinput::{self, ConnectionExt as _, DeviceClassData, DeviceType, XIEventMask};
-    use x11rb::protocol::xproto::ConnectionExt as _;
+    use x11rb::protocol::xproto::{ConnectionExt as _, BUTTON_PRESS_EVENT, BUTTON_RELEASE_EVENT, MOTION_NOTIFY_EVENT};
+    use x11rb::protocol::xtest::{self, ConnectionExt as _};
     use x11rb::protocol::Event;
     use x11rb::rust_connection::RustConnection;
 
@@ -464,8 +707,82 @@ pub mod x11 {
         Ok(descricao)
     }
 
+    /// Onde a ponta está: posição física relativa à janela do app (se
+    /// conhecida), largura física dela e posição na raiz (para o XTest).
+    struct Ponto {
+        janela: Option<(f32, f32, f32)>,
+        raiz: (i16, i16),
+    }
+
+    fn onde_esta(conn: &RustConnection, raiz: u32, janela: Option<u32>) -> Option<Ponto> {
+        let alvo = janela.unwrap_or(raiz);
+        let q = conn.query_pointer(alvo).ok()?.reply().ok()?;
+        let na_janela = janela.and_then(|j| {
+            let largura = conn.get_geometry(j).ok()?.reply().ok()?.width;
+            Some((f32::from(q.win_x), f32::from(q.win_y), f32::from(largura)))
+        });
+        Some(Ponto { janela: na_janela, raiz: (q.root_x, q.root_y) })
+    }
+
+    /// Toque em andamento (a ponta encostada).
+    struct Contato {
+        na_tinta: bool,
+        borracha: bool,
+        cliques_ao_encostar: u64,
+        raiz: (i16, i16),
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn toque(
+        fonte: &FontePressao,
+        fase: FaseToque,
+        ponto: &Ponto,
+        pressao: Option<f32>,
+        na_tinta: Option<bool>,
+        borracha: bool,
+        agora: Instant,
+    ) -> Option<ToqueCaneta> {
+        let (x, y, largura) = ponto.janela?;
+        let posicao = fisico_para_logico(x, y, largura, fonte.tamanho_logico().map(|t| t.width));
+        let na_tinta = na_tinta.unwrap_or_else(|| fonte.zona_tinta().is_some_and(|z| z.area.contains(posicao)));
+        Some(ToqueCaneta { fase, posicao, pressao, instante: agora, na_tinta, borracha })
+    }
+
+    /// Ponta de borracha (o XWayland chama de "xwayland-tablet eraser").
+    pub fn e_borracha(nome: &str) -> bool {
+        nome.to_ascii_lowercase().contains("eraser")
+    }
+
+    /// Clique de mouse sintético (XTest) onde a ponta encostou: o servidor
+    /// leu a caneta mas não entregou o botão à janela do app. Espera um
+    /// pouco antes, para o clique do próprio Iced (se veio) ser contado.
+    fn clique_sintetico(conn: Arc<RustConnection>, raiz: u32, contato: Contato, fonte: FontePressao) {
+        let _ = std::thread::Builder::new().name("caneta-clique".into()).spawn(move || {
+            std::thread::sleep(Duration::from_millis(80));
+            if !precisa_clique_sintetico(false, contato.cliques_ao_encostar, cliques_iced()) {
+                anotar(|| "[caneta-x11] o Iced recebeu o clique da caneta; sem clique sintético".into());
+                return;
+            }
+            let (x, y) = contato.raiz;
+            fonte.marcar_sinal();
+            let r = (|| -> Result<(), x11rb::errors::ConnectionError> {
+                conn.xtest_fake_input(MOTION_NOTIFY_EVENT, 0, 0, raiz, x, y, 0)?;
+                conn.xtest_fake_input(BUTTON_PRESS_EVENT, 1, 0, raiz, 0, 0, 0)?;
+                conn.xtest_fake_input(BUTTON_RELEASE_EVENT, 1, 0, raiz, 0, 0, 0)?;
+                conn.flush()
+            })();
+            match r {
+                Ok(()) => anotar(|| format!("[caneta-x11] o Iced não recebeu o toque: clique sintético (XTest) na raiz ({x}, {y})")),
+                Err(e) => anotar(|| format!("[caneta-x11] clique sintético falhou: {e}")),
+            }
+        });
+    }
+
     fn ler(conn: RustConnection, raiz: u32, mut canetas: Vec<Caneta>, fonte: FontePressao) {
+        let conn = Arc::new(conn);
+        let xtest = conn.extension_information(xtest::X11_EXTENSION_NAME).ok().flatten().is_some();
         let mut contagem = 0u64;
+        let mut contato: Option<Contato> = None;
         loop {
             let evento = match conn.wait_for_event() {
                 Ok(e) => e,
@@ -478,18 +795,63 @@ pub mod x11 {
             match evento {
                 Event::XinputRawMotion(e) => {
                     let Some(c) = canetas.iter().find(|c| c.id == e.deviceid) else { continue };
-                    let Some(bruto) = valor_do_eixo(&e.valuator_mask, &e.axisvalues, c.eixo) else { continue };
-                    let Some(p) = normalizar_valuator(bruto, c.minimo, c.maximo) else { continue };
-                    fonte.registrar(agora, p);
-                    contagem += 1;
-                    if p > 0.0 && contagem % 20 == 1 {
-                        anotar(|| format!("[caneta-x11] {}: pressão bruta {bruto} -> {p:.3}", c.nome));
+                    let pressao = valor_do_eixo(&e.valuator_mask, &e.axisvalues, c.eixo)
+                        .and_then(|bruto| normalizar_valuator(bruto, c.minimo, c.maximo).map(|p| (bruto, p)));
+                    if let Some((bruto, p)) = pressao {
+                        fonte.registrar(agora, p);
+                        contagem += 1;
+                        if p > 0.0 && contagem % 20 == 1 {
+                            anotar(|| format!("[caneta-x11] {}: pressão bruta {bruto} -> {p:.3}", c.nome));
+                        }
+                    }
+                    // Ponta encostada: o traço segue pela leitura daqui.
+                    if let Some(ct) = &contato {
+                        if let Some(t) = onde_esta(&conn, raiz, fonte.janela_x11())
+                            .and_then(|pt| toque(&fonte, FaseToque::Moveu, &pt, pressao.map(|(_, p)| p), Some(ct.na_tinta), ct.borracha, agora))
+                        {
+                            fonte.enviar_toque(t);
+                        }
                     }
                 }
                 Event::XinputRawButtonPress(e) | Event::XinputRawButtonRelease(e) => {
                     let solto = e.event_type == xinput::RAW_BUTTON_RELEASE_EVENT;
-                    let nome = canetas.iter().find(|c| c.id == e.deviceid).map(|c| c.nome.clone()).unwrap_or_default();
+                    let Some(c) = canetas.iter().find(|c| c.id == e.deviceid) else { continue };
+                    let nome = c.nome.clone();
+                    let borracha = e_borracha(&nome);
                     anotar(|| format!("[caneta-x11] {nome}: botão {} {}", e.detail, if solto { "solto" } else { "apertado" }));
+                    if e.detail != 1 {
+                        continue;
+                    }
+                    let Some(pt) = onde_esta(&conn, raiz, fonte.janela_x11()) else { continue };
+                    if !solto {
+                        // A amostra de pressão do encostar chega no movimento
+                        // seguinte; a mais recente serve de começo.
+                        let pressao = fonte.pressao_em(agora);
+                        let t = toque(&fonte, FaseToque::Encostou, &pt, pressao, None, borracha, agora);
+                        let na_tinta = t.is_some_and(|t| t.na_tinta);
+                        anotar(|| match t {
+                            Some(t) => format!(
+                                "[caneta-x11] encostou em ({:.0}, {:.0}) lógico, {}",
+                                t.posicao.x,
+                                t.posicao.y,
+                                if na_tinta { "na camada de tinta: traço pela leitura X11" } else { "fora da tinta: clique" }
+                            ),
+                            None => "[caneta-x11] encostou (janela do app desconhecida)".into(),
+                        });
+                        contato = Some(Contato { na_tinta, borracha, cliques_ao_encostar: cliques_iced(), raiz: pt.raiz });
+                        match t {
+                            Some(t) => fonte.enviar_toque(t),
+                            None => fonte.marcar_contato(agora),
+                        }
+                    } else if let Some(ct) = contato.take() {
+                        match toque(&fonte, FaseToque::Levantou, &pt, None, Some(ct.na_tinta), ct.borracha, agora) {
+                            Some(t) => fonte.enviar_toque(t),
+                            None => fonte.marcar_soltura(),
+                        }
+                        if !ct.na_tinta && xtest {
+                            clique_sintetico(Arc::clone(&conn), raiz, ct, fonte.clone());
+                        }
+                    }
                 }
                 Event::XinputHierarchy(_) => {
                     canetas = procurar(&conn);
@@ -683,5 +1045,66 @@ mod testes {
         assert_eq!(x11::valor_do_eixo(&[0b011], &[v(1), v(2)], 2), None, "pressão não veio");
         assert!((x11::valor_do_eixo(&[1], &[Fp3232 { integral: 1, frac: 1 << 31 }], 0).unwrap() - 1.5).abs() < 1e-9);
         assert!(x11::rotulo_de_pressao("Abs Pressure") && !x11::rotulo_de_pressao("Abs Tilt X"));
+        assert!(x11::e_borracha("xwayland-tablet eraser:17") && !x11::e_borracha("xwayland-tablet stylus:17"));
+    }
+
+    #[test]
+    fn toques_da_caneta_vao_em_ordem_e_acordam_a_assinatura() {
+        let f = FontePressao::nova();
+        assert!(!f.entrega_toques() && !f.em_contato());
+        let (tx, mut rx) = mpsc::unbounded();
+        f.registrar_despertar(tx);
+        let t0 = Instant::now();
+        let toque = |fase, x: f32| ToqueCaneta { fase, posicao: Point::new(x, 0.0), pressao: Some(0.5), instante: t0, na_tinta: true, borracha: false };
+        f.enviar_toque(toque(FaseToque::Encostou, 1.0));
+        assert!(f.em_contato() && f.encostou_desde(t0) && !f.encostou_desde(t0 + Duration::from_millis(1)));
+        f.enviar_toque(toque(FaseToque::Moveu, 2.0));
+        f.enviar_toque(toque(FaseToque::Levantou, 3.0));
+        assert!(!f.em_contato() && f.encostou_desde(t0), "o último encostar fica lembrado");
+        let xs: Vec<f32> = f.recolher_toques().iter().map(|t| t.posicao.x).collect();
+        assert_eq!(xs, vec![1.0, 2.0, 3.0]);
+        assert!(f.recolher_toques().is_empty());
+        let mut acordou = 0;
+        while rx.try_recv().is_ok() {
+            acordou += 1;
+        }
+        assert_eq!(acordou, 3);
+        assert!(f.caneta_em_uso(Duration::from_millis(500)), "acabou de tocar");
+        assert!(!FontePressao::nova().caneta_em_uso(Duration::from_millis(500)), "sem caneta: é o mouse");
+        f.definir_janela_x11(77);
+        assert_eq!(f.janela_x11(), Some(77));
+        assert!(f.entrega_toques());
+        let area = Rectangle::new(Point::new(10.0, 10.0), Size::new(5.0, 5.0));
+        f.definir_zona_tinta(Some(ZonaTinta { area, origem: Point::ORIGIN }));
+        assert!(f.zona_tinta().is_some_and(|z| z.area.contains(Point::new(12.0, 12.0))));
+        f.definir_zona_tinta(None);
+        assert!(f.zona_tinta().is_none());
+        // A fila tem teto.
+        for i in 0..(MAX_TOQUES + 10) {
+            f.enviar_toque(toque(FaseToque::Moveu, i as f32));
+        }
+        let fila = f.recolher_toques();
+        assert_eq!(fila.len(), MAX_TOQUES);
+        assert_eq!(fila[0].posicao.x, 10.0);
+    }
+
+    #[test]
+    fn pixel_fisico_vira_logico_pela_razao_das_larguras() {
+        // Janela de 2560 px físicos com 1280 lógicos (escala 2).
+        assert_eq!(fisico_para_logico(400.0, 300.0, 2560.0, Some(1280.0)), Point::new(200.0, 150.0));
+        assert_eq!(fisico_para_logico(400.0, 300.0, 1280.0, Some(1280.0)), Point::new(400.0, 300.0));
+        // Sem o tamanho lógico (ou inválido): 1:1.
+        assert_eq!(fisico_para_logico(400.0, 300.0, 1280.0, None), Point::new(400.0, 300.0));
+        assert_eq!(fisico_para_logico(400.0, 300.0, 0.0, Some(1280.0)), Point::new(400.0, 300.0));
+    }
+
+    #[test]
+    fn clique_sintetico_so_quando_o_iced_nao_recebeu_e_fora_da_tinta() {
+        assert!(precisa_clique_sintetico(false, 5, 5), "faixa/célula sem clique no Iced: sintetiza");
+        assert!(!precisa_clique_sintetico(false, 5, 6), "o Iced recebeu: não duplica");
+        assert!(!precisa_clique_sintetico(true, 5, 5), "na camada de tinta o traço é pela leitura X11");
+        let antes = cliques_iced();
+        registrar_clique_iced();
+        assert!(cliques_iced() > antes);
     }
 }

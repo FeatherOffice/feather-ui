@@ -15,7 +15,7 @@ iced = { version = "0.13", features = ["svg", "canvas", "auto-detect-theme"] }
 # Pressão da caneta (src/caneta.rs). Linux: XInput2 em Rust puro (x11rb,
 # conexão própria, sem libxcb/libXi). Windows: WM_POINTER pela API do sistema.
 [target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android")))'.dependencies]
-x11rb = { version = "0.13", features = ["xinput"] }
+x11rb = { version = "0.13", features = ["xinput", "xtest"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
