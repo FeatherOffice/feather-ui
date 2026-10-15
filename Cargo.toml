@@ -24,3 +24,7 @@ windows-sys = { version = "0.59", features = [
     "Win32_UI_Input_Pointer",
     "Win32_UI_WindowsAndMessaging",
 ] }
+
+# Só o exemplo caneta_cliques (autoteste com clique sintético pelo XTest).
+[target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "android")))'.dev-dependencies]
+x11rb = { version = "0.13", features = ["xinput", "xtest"] }

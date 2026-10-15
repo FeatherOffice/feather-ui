@@ -1,12 +1,14 @@
 //! Diagnóstico dos CLIQUES da caneta numa janela X (XWayland ou X11).
 //!
-//! Abre uma janela X com duas metades e imprime o que o servidor entrega:
+//! Abre uma janela X com três colunas e imprime o que o servidor entrega:
 //!
-//! - **metade esquerda (clara)**: eventos XInput2 — `XI_ButtonPress/Release`,
-//!   `XI_Motion`, `XI_Enter/Leave` de *todos os mestres* e de *todos os
-//!   dispositivos*, e `XI_TouchBegin/Update/End` dos mestres. É o que o
-//!   winit 0.30 (Iced 0.13) seleciona na janela dele, mais os escravos;
-//! - **metade direita (escura)**: eventos *core* (`ButtonPress`,
+//! - **coluna esquerda (clara)**: XInput2 de *todos os mestres*
+//!   (`XI_ButtonPress/Release`, `XI_Motion`, `XI_Enter/Leave`,
+//!   `XI_TouchBegin/Update/End`) — o mesmo que o winit 0.30 (Iced 0.13)
+//!   seleciona na janela dele;
+//! - **coluna do meio (clara)**: XInput2 de *todos os dispositivos*
+//!   (inclui os escravos: a caneta, o mouse físico);
+//! - **coluna direita (escura)**: eventos *core* (`ButtonPress`,
 //!   `ButtonRelease`, `MotionNotify`), sem XInput2.
 //!
 //! Para cada evento: tipo, `deviceid`, `sourceid` (com o nome), botão
@@ -14,13 +16,15 @@
 //! winit descarta), posição e a pressão, quando a origem tem esse eixo.
 //! Movimentos são resumidos (o primeiro de cada origem e um a cada 40).
 //!
-//! A janela também DESENHA o traço: na metade clara, preto = mouse, azul =
+//! A janela também DESENHA o traço: nas colunas claras, preto = mouse, azul =
 //! caneta com botão apertado (largura pela pressão), vermelho = caneta com
-//! pressão mas SEM botão (o toque não virou clique); na metade escura
+//! pressão mas SEM botão (o toque não virou clique); na coluna escura
 //! (core), branco com o botão 1 apertado.
 //!
 //! `cargo run --example caneta_cliques -- 20` (segundos; padrão 20).
-//! Encoste o MOUSE e depois a CANETA nas duas metades e compare.
+//! `cargo run --example caneta_cliques -- --autoteste`: arrasto sintético
+//! pelo XTest na coluna esquerda, confere se chegou ButtonPress e traço.
+//! Encoste o MOUSE e depois a CANETA nas três colunas e compare.
 fn main() {
     #[cfg(all(unix, not(target_os = "macos"), not(target_os = "android")))]
     linux::rodar();
@@ -37,13 +41,15 @@ mod linux {
     use x11rb::protocol::xinput::{self, ConnectionExt as _, DeviceClassData, XIEventMask};
     use x11rb::protocol::xproto::{
         AtomEnum, CapStyle, ChangeGCAux, ConnectionExt as _, CoordMode, CreateGCAux, CreateWindowAux, EventMask,
-        JoinStyle, KeyButMask, Point, PropMode, WindowClass,
+        ButtonPressEvent, JoinStyle, KeyButMask, Point, PropMode, WindowClass,
     };
+    use x11rb::protocol::xproto::{BUTTON_PRESS_EVENT, BUTTON_RELEASE_EVENT, MOTION_NOTIFY_EVENT};
+    use x11rb::protocol::xtest::ConnectionExt as _;
     use x11rb::protocol::Event;
     use x11rb::rust_connection::RustConnection;
     use x11rb::wrapper::ConnectionExt as _;
 
-    const LARGURA: u16 = 900;
+    const LARGURA: u16 = 1200;
     const ALTURA: u16 = 450;
 
     /// Dispositivo conhecido: nome e, se houver, o eixo de pressão.
@@ -116,13 +122,16 @@ mod linux {
     }
 
     pub fn rodar() {
-        let segundos: u64 = std::env::args().nth(1).and_then(|s| s.parse().ok()).unwrap_or(20);
-        if let Err(e) = executar(segundos) {
+        let args: Vec<String> = std::env::args().skip(1).collect();
+        let autoteste = args.iter().any(|a| a == "--autoteste");
+        let segundos: u64 =
+            args.iter().find_map(|s| s.parse().ok()).unwrap_or(if autoteste { 3 } else { 20 });
+        if let Err(e) = executar(segundos, autoteste) {
             println!("Falhou: {e}");
         }
     }
 
-    fn executar(segundos: u64) -> Result<(), Box<dyn std::error::Error>> {
+    fn executar(segundos: u64, autoteste: bool) -> Result<(), Box<dyn std::error::Error>> {
         println!(
             "WAYLAND_DISPLAY={:?} DISPLAY={:?}",
             std::env::var("WAYLAND_DISPLAY").ok(),
@@ -159,97 +168,151 @@ mod linux {
         conn.change_property8(PropMode::REPLACE, principal, net_wm_name, utf8, titulo.as_bytes())?;
         let ascii = format!("Escreva com a CANETA e com o MOUSE - {segundos} s");
         conn.change_property8(PropMode::REPLACE, principal, AtomEnum::WM_NAME, AtomEnum::STRING, ascii.as_bytes())?;
-        let metade = LARGURA / 2;
-        let esquerda = conn.generate_id()?;
-        conn.create_window(
-            0,
-            esquerda,
-            principal,
-            0,
-            0,
-            metade - 2,
-            ALTURA,
-            0,
-            WindowClass::INPUT_OUTPUT,
-            0,
-            &CreateWindowAux::new().background_pixel(branco),
-        )?;
-        let direita = conn.generate_id()?;
-        conn.create_window(
-            0,
-            direita,
-            principal,
-            i16::try_from(metade + 2)?,
-            0,
-            metade - 2,
-            ALTURA,
-            0,
-            WindowClass::INPUT_OUTPUT,
-            0,
-            &CreateWindowAux::new().background_pixel(preto).event_mask(
-                EventMask::BUTTON_PRESS
-                    | EventMask::BUTTON_RELEASE
-                    | EventMask::POINTER_MOTION
-                    | EventMask::ENTER_WINDOW
-                    | EventMask::LEAVE_WINDOW,
-            ),
+        // Três colunas: esquerda = XI2 dos mestres (o que o winit seleciona),
+        // meio = XI2 de todos os dispositivos, direita = eventos core.
+        let terco = LARGURA / 3;
+        let filha = |x: u16, fundo: u32, mascara: EventMask| -> Result<u32, Box<dyn std::error::Error>> {
+            let id = conn.generate_id()?;
+            conn.create_window(
+                0,
+                id,
+                principal,
+                i16::try_from(x)?,
+                0,
+                terco - 3,
+                ALTURA,
+                0,
+                WindowClass::INPUT_OUTPUT,
+                0,
+                &CreateWindowAux::new().background_pixel(fundo).event_mask(mascara),
+            )?;
+            Ok(id)
+        };
+        let esquerda = filha(0, branco, EventMask::EXPOSURE)?;
+        let meio = filha(terco, branco, EventMask::EXPOSURE)?;
+        let direita = filha(
+            2 * terco,
+            preto,
+            EventMask::BUTTON_PRESS
+                | EventMask::BUTTON_RELEASE
+                | EventMask::POINTER_MOTION
+                | EventMask::ENTER_WINDOW
+                | EventMask::LEAVE_WINDOW
+                | EventMask::EXPOSURE,
         )?;
 
-        // Pincéis: na metade clara, preto = mouse, azul = caneta com botão
+        // Pincéis: nas colunas claras, preto = mouse, azul = caneta com botão
         // apertado, vermelho = caneta com pressão MAS sem botão (o toque não
-        // virou clique). Na metade escura (core, sem origem): branco.
+        // virou clique). Na coluna escura (core, sem origem): branco.
         let cmap = screen.default_colormap;
         let cor = |r: u16, g: u16, b: u16| -> Result<u32, Box<dyn std::error::Error>> {
             Ok(conn.alloc_color(cmap, r, g, b)?.reply()?.pixel)
         };
         let azul = cor(0x1000, 0x4000, 0xf000)?;
         let vermelho = cor(0xe000, 0x1000, 0x1000)?;
-        let novo_gc = |janela: u32, pixel: u32| -> Result<u32, Box<dyn std::error::Error>> {
+        let novo_gc = |pixel: u32| -> Result<u32, Box<dyn std::error::Error>> {
             let gc = conn.generate_id()?;
             conn.create_gc(
                 gc,
-                janela,
+                principal,
                 &CreateGCAux::new().foreground(pixel).line_width(2).cap_style(CapStyle::ROUND).join_style(JoinStyle::ROUND),
             )?;
             Ok(gc)
         };
-        let gc_mouse = novo_gc(esquerda, preto)?;
-        let gc_caneta = novo_gc(esquerda, azul)?;
-        let gc_sem_botao = novo_gc(esquerda, vermelho)?;
-        let gc_core = novo_gc(direita, branco)?;
-        let mut ultimo: HashMap<u16, (i16, i16)> = HashMap::new();
+        let gc_mouse = novo_gc(preto)?;
+        let gc_caneta = novo_gc(azul)?;
+        let gc_sem_botao = novo_gc(vermelho)?;
+        let gc_core = novo_gc(branco)?;
+        let mut ultimo: HashMap<(u32, u16), (i16, i16)> = HashMap::new();
         let mut ultimo_core: Option<(i16, i16)> = None;
+        let mut tracos = 0u64;
 
-        // XInput2 na metade esquerda. Mestres (1) = o que o winit seleciona;
-        // todos (0) = também os escravos (a caneta, o mouse físico).
+        // XInput2: cada seleção conferida com .check(), erro impresso.
         let ponteiro = XIEventMask::BUTTON_PRESS | XIEventMask::BUTTON_RELEASE | XIEventMask::MOTION;
         let toque = XIEventMask::TOUCH_BEGIN | XIEventMask::TOUCH_UPDATE | XIEventMask::TOUCH_END;
         let mestres = ponteiro | XIEventMask::ENTER | XIEventMask::LEAVE;
-        let com_toque = [
-            xinput::EventMask { deviceid: 1, mask: vec![mestres | toque] },
-            xinput::EventMask { deviceid: 0, mask: vec![ponteiro] },
-        ];
-        match conn.xinput_xi_select_events(esquerda, &com_toque)?.check() {
-            Ok(()) => println!("XInput2 selecionado (com toque) na metade esquerda"),
-            Err(e) => {
-                println!("Toque recusado ({e:?}); seguindo sem toque");
-                let sem_toque = [
-                    xinput::EventMask { deviceid: 1, mask: vec![mestres] },
-                    xinput::EventMask { deviceid: 0, mask: vec![ponteiro] },
-                ];
-                conn.xinput_xi_select_events(esquerda, &sem_toque)?.check()?;
+        let selecionar = |janela: u32, deviceid: u16, mascara: XIEventMask, rotulo: &str| -> bool {
+            let r = conn
+                .xinput_xi_select_events(janela, &[xinput::EventMask { deviceid, mask: vec![mascara] }])
+                .map_err(|e| format!("{e:?}"))
+                .and_then(|c| c.check().map_err(|e| format!("{e:?}")));
+            match r {
+                Ok(()) => {
+                    println!("Seleção XI2 OK: {rotulo}");
+                    true
+                }
+                Err(e) => {
+                    println!("Seleção XI2 FALHOU: {rotulo}: {e}");
+                    false
+                }
             }
+        };
+        if !selecionar(esquerda, 1, mestres | toque, "coluna esquerda, XIAllMasterDevices, ponteiro+toque") {
+            selecionar(esquerda, 1, mestres, "coluna esquerda, XIAllMasterDevices, só ponteiro");
         }
+        selecionar(meio, 0, ponteiro | XIEventMask::ENTER | XIEventMask::LEAVE, "coluna do meio, XIAllDevices, ponteiro");
         // Troca de dispositivos (a caneta entra/sai de proximidade no XWayland).
-        conn.xinput_xi_select_events(raiz, &[xinput::EventMask { deviceid: 0, mask: vec![XIEventMask::HIERARCHY] }])?
-            .check()?;
+        selecionar(raiz, 0, XIEventMask::HIERARCHY, "raiz, XIAllDevices, hierarquia");
 
         conn.map_window(esquerda)?;
+        conn.map_window(meio)?;
         conn.map_window(direita)?;
         conn.map_window(principal)?;
         conn.flush()?;
-        println!("Janela aberta por {segundos} s: escreva com a CANETA e com o MOUSE nas duas metades.");
+        println!("Janela aberta por {segundos} s: escreva com a CANETA e com o MOUSE nas três colunas.");
+        println!("Colunas: esquerda = XI2 mestres (igual ao winit), meio = XI2 todos os dispositivos, direita = core.");
         println!("Traço preto = mouse, azul = caneta com botão, vermelho = caneta com pressão SEM botão.\n");
+
+        // Autoteste: clique-arraste sintético pelo XTest na coluna esquerda.
+        if autoteste {
+            std::thread::sleep(Duration::from_millis(800));
+            while conn.poll_for_event()?.is_some() {}
+            let base = conn.translate_coordinates(esquerda, raiz, 40, 60)?.reply()?;
+            let (x0, y0) = (base.dst_x, base.dst_y);
+            match conn.xtest_get_version(2, 2).map(|c| c.reply()) {
+                Ok(Ok(v)) => println!("XTEST {}.{}", v.major_version, v.minor_version),
+                Ok(Err(e)) => println!("XTEST indisponível: {e:?}"),
+                Err(e) => println!("XTEST indisponível: {e:?}"),
+            }
+            println!("Autoteste: XTest arrasta de ({x0}, {y0}) na raiz (coluna esquerda)");
+            conn.xtest_fake_input(MOTION_NOTIFY_EVENT, 0, 0, raiz, x0, y0, 0)?;
+            conn.flush()?;
+            std::thread::sleep(Duration::from_millis(60));
+            conn.xtest_fake_input(BUTTON_PRESS_EVENT, 1, 0, raiz, 0, 0, 0)?;
+            for i in 1..=20i16 {
+                conn.xtest_fake_input(MOTION_NOTIFY_EVENT, 0, 0, raiz, x0 + i * 8, y0 + i * 5, 0)?;
+                conn.flush()?;
+                std::thread::sleep(Duration::from_millis(15));
+            }
+            conn.xtest_fake_input(BUTTON_RELEASE_EVENT, 1, 0, raiz, 0, 0, 0)?;
+            conn.flush()?;
+            // Sob o GNOME o XWayland pode não aplicar o XTest. Para conferir ao
+            // menos o desenho, manda um arrasto core sintético (SendEvent) à
+            // coluna direita: chega marcado como "enviado", sem XInput2.
+            println!("Autoteste: SendEvent core (ButtonPress + 10 MotionNotify com botão 1 + ButtonRelease) na coluna direita");
+            let evento = |tipo: u8, botao: u8, x: i16, y: i16, estado: KeyButMask| ButtonPressEvent {
+                response_type: tipo,
+                detail: botao,
+                sequence: 0,
+                time: 0,
+                root: raiz,
+                event: direita,
+                child: 0,
+                root_x: 0,
+                root_y: 0,
+                event_x: x,
+                event_y: y,
+                state: estado,
+                same_screen: true,
+            };
+            conn.send_event(false, direita, EventMask::NO_EVENT, evento(BUTTON_PRESS_EVENT, 1, 40, 60, KeyButMask::default()))?;
+            for i in 1..=10i16 {
+                let m = evento(MOTION_NOTIFY_EVENT, 0, 40 + i * 12, 60 + i * 8, KeyButMask::BUTTON1);
+                conn.send_event(false, direita, EventMask::NO_EVENT, m)?;
+            }
+            conn.send_event(false, direita, EventMask::NO_EVENT, evento(BUTTON_RELEASE_EVENT, 1, 160, 140, KeyButMask::BUTTON1))?;
+            conn.flush()?;
+        }
 
         let inicio = Instant::now();
         let fim = inicio + Duration::from_secs(segundos);
@@ -272,11 +335,13 @@ mod linux {
                     let flags = u32::from(e.flags);
                     let emulado = flags & u32::from(xinput::PointerEventFlags::POINTER_EMULATED) != 0;
                     let alvo = if e.deviceid == e.sourceid { "escravo" } else { "mestre" };
+                    let coluna = if e.event == esquerda { "esq" } else if e.event == meio { "meio" } else { "?" };
                     *contagem
-                        .entry(format!("{tipo} {alvo} origem {} \"{}\"{}", e.sourceid, nome(&mapa, e.sourceid), if emulado { " EMULADO" } else { "" }))
+                        .entry(format!("[{coluna}] {tipo} {alvo} origem {} \"{}\"{}", e.sourceid, nome(&mapa, e.sourceid), if emulado { " EMULADO" } else { "" }))
                         .or_default() += 1;
-                    // Traço: só pelo evento do mestre (o do escravo é o mesmo).
-                    if alvo == "mestre" {
+                    // Traço: na coluna esquerda pelo evento do mestre, na do
+                    // meio pelo do escravo (o outro é o mesmo movimento).
+                    if (e.event == esquerda && alvo == "mestre") || (e.event == meio && alvo == "escravo") {
                         let ponto = (fp16(e.event_x) as i16, fp16(e.event_y) as i16);
                         let apertado = e.button_mask.first().is_some_and(|m| m & 0b10 != 0);
                         let p = valor_pressao(&mapa, e.sourceid, &e.valuator_mask, &e.axisvalues);
@@ -287,7 +352,7 @@ mod linux {
                             _ => apertado || (caneta && p.is_some_and(|p| p > 0.0)),
                         };
                         if escrevendo {
-                            if let Some(antes) = ultimo.get(&e.sourceid).copied() {
+                            if let Some(antes) = ultimo.get(&(e.event, e.sourceid)).copied() {
                                 let gc = if !caneta {
                                     gc_mouse
                                 } else if apertado || e.event_type == xinput::BUTTON_PRESS_EVENT {
@@ -297,17 +362,18 @@ mod linux {
                                 };
                                 let largura = p.map(|p| (1.0 + 7.0 * p).round() as u32).unwrap_or(2);
                                 conn.change_gc(gc, &ChangeGCAux::new().line_width(largura))?;
+                                tracos += 1;
                                 conn.poly_line(
                                     CoordMode::ORIGIN,
-                                    esquerda,
+                                    e.event,
                                     gc,
                                     &[Point { x: antes.0, y: antes.1 }, Point { x: ponto.0, y: ponto.1 }],
                                 )?;
                                 conn.flush()?;
                             }
-                            ultimo.insert(e.sourceid, ponto);
+                            ultimo.insert((e.event, e.sourceid), ponto);
                         } else {
-                            ultimo.remove(&e.sourceid);
+                            ultimo.remove(&(e.event, e.sourceid));
                         }
                     }
                     if tipo == "XI_Motion" {
@@ -318,7 +384,7 @@ mod linux {
                         }
                     }
                     println!(
-                        "{t:8.3}s {tipo:<16} disp {:>2} ({}) origem {:>2} \"{}\" botão {} flags {flags:#x}{} em ({:.1}, {:.1}){}",
+                        "{t:8.3}s [{coluna}] {tipo:<16} disp {:>2} ({}) origem {:>2} \"{}\" botão {} flags {flags:#x}{} em ({:.1}, {:.1}){}",
                         e.deviceid,
                         alvo,
                         e.sourceid,
@@ -386,6 +452,7 @@ mod linux {
                     let ponto = (e.event_x, e.event_y);
                     if u16::from(e.state) & u16::from(KeyButMask::BUTTON1) != 0 {
                         if let Some(antes) = ultimo_core {
+                            tracos += 1;
                             conn.poly_line(
                                 CoordMode::ORIGIN,
                                 direita,
@@ -409,6 +476,14 @@ mod linux {
             }
         }
 
+        println!("\nTraços desenhados: {tracos}");
+        if autoteste {
+            let apertos: u64 = contagem.iter().filter(|(k, _)| k.contains("ButtonPress")).map(|(_, n)| n).sum();
+            println!(
+                "AUTOTESTE: {} (ButtonPress recebidos: {apertos}, traços: {tracos})",
+                if apertos > 0 && tracos > 0 { "OK" } else { "FALHOU" }
+            );
+        }
         println!("\nResumo (eventos por tipo e origem):");
         let mut linhas: Vec<_> = contagem.into_iter().collect();
         linhas.sort();
