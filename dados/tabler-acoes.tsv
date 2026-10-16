@@ -146,3 +146,8 @@ indent-increase	Text	indent,increase-indent,recuo,aumentar,text,format	M20 6l-7 
 copy-plus	Text	copy,plus,duplicate,clone,add	M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666|M4.012 16.737a2 2 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1|M11 14h6|M14 11v6
 link-off	Text	link,off,unlink,remove,hyperlink,hiperlink,remover,limpar	M9 15l3 -3m2 -2l1 -1|M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464|M3 3l18 18|M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463
 underline-double	Text	underline,double,sublinhado,duplo,text,formatting,font,desenhado-no-estilo-tabler	M7 4v5a5 5 0 0 0 10 0v-5|M5 18h14|M5 21h14
+user	Suite	user,person,account,autor,pessoa,perfil	M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0|M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2
+world	Suite	world,globe,language,idioma,mundo	M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0|M3.6 9h16.8|M3.6 15h16.8|M11.5 3a17 17 0 0 0 0 18|M12.5 3a17 17 0 0 1 0 18
+sparkles	Suite	sparkles,new,novidades,novo,brilho	M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z
+history	Suite	history,recover,recuperar,historico,voltar	M12 8l0 4l2 2|M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5
+rocket	Suite	rocket,start,launch,comecar,inicio	M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3 -5a9 9 0 0 0 6 -8a3 3 0 0 0 -3 -3a9 9 0 0 0 -8 6a6 6 0 0 0 -5 3|M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3|M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0

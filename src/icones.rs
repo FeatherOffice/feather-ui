@@ -132,6 +132,16 @@ pub fn icone(nome: &str, tamanho: f32) -> svg::Svg<'static, iced::Theme> {
         })
 }
 
+/// Sempre o traço Tabler monocromático (cor do texto), mesmo quando a faixa
+/// tem um desenho colorido com esse nome: janelas de consulta (F1,
+/// Primeiros passos, Novidades) não misturam ícones coloridos e de traço.
+pub fn icone_traco(nome: &str, tamanho: f32) -> svg::Svg<'static, iced::Theme> {
+    svg::Svg::new(svg::Handle::from_memory(svg_tabler(nome).into_bytes()))
+        .width(tamanho)
+        .height(tamanho)
+        .style(|_, _| svg::Style { color: Some(crate::tema::COR_TEXTO()) })
+}
+
 /// Variante cromática para ações de destaque. Os SVGs do Ribbon conservam
 /// suas cores próprias; a cor de destaque aplica-se apenas aos ícones Tabler.
 /// A cor é restrita às usadas na identidade visual da suíte.
@@ -323,7 +333,7 @@ mod testes_ui012 {
             }
         }
         assert_eq!(
-            hash, 0x68739c2bf82f193a,
+            hash, 0x979c9bf809c867af,
             "o desenho SVG embutido mudou; revisar visual Linux/Windows antes de atualizar o baseline",
         );
     }

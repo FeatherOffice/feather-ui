@@ -2,10 +2,10 @@
 //! O modelo, a busca e os eventos continuam compartilhados entre os apps;
 //! todas as cores vêm dos tokens da preferência ativa (claro/escuro/acento).
 use super::*;
-use crate::{icones, tema};
+use crate::{consulta, icones, tema};
+use crate::consulta::estilo_cartao as estilo_card;
 use iced::widget::{button, column, container, row, scrollable, svg, text, text_input, Space};
-use iced::{Alignment, Background, Border, Color, Element, Font, Length, Theme};
-use iced::widget::button::Status;
+use iced::{Alignment, Background, Border, Element, Font, Length, Theme};
 
 #[derive(Clone)]
 struct Guia {
@@ -15,13 +15,9 @@ struct Guia {
     destino: Evento,
 }
 fn texto_negrito(nome: impl Into<String>, tamanho: f32) -> Element<'static, Evento> {
-    text(nome.into()).size(tamanho).font(Font {
-        weight: iced::font::Weight::Semibold, ..Font::DEFAULT
-    }).into()
+    consulta::negrito(nome, tamanho)
 }
-fn fundo_pastel() -> Color {
-    tema::COR_AZUL_FUNDO()
-}
+
 fn barra() -> container::Style {
     container::Style {
         background: Some(Background::Color(tema::COR_PAINEL())),
@@ -44,74 +40,12 @@ fn superficie_sidebar(_: &Theme) -> container::Style {
         ..Default::default()
     }
 }
-fn estilo_card(_: &Theme, status: Status) -> button::Style {
-    button::Style {
-        background: Some(Background::Color(
-            if matches!(status, Status::Hovered | Status::Pressed) {
-                tema::COR_AZUL_FUNDO()
-            } else {
-                tema::COR_PAINEL()
-            }
-        )),
-        text_color: tema::COR_TEXTO(),
-        border: Border {
-            color: tema::COR_BORDA(),
-            width: 1.,
-            radius: 11.0.into()
-        },
-        ..Default::default()
-    }
-}
-fn estilo_nav(_: &Theme, status: Status, selecionado: bool) -> button::Style {
-    let fundo = if selecionado {
-        Some(Background::Color(tema::COR_AZUL_FUNDO()))
-    } else if matches!(status, Status::Hovered | Status::Pressed) {
-        Some(Background::Color(tema::COR_HOVER()))
-    } else {
-        None
-    };
-    button::Style {
-        background: fundo,
-        text_color: tema::COR_TEXTO(),
-        border: Border { radius: 9.0.into(), ..Default::default() },
-        ..Default::default()
-    }
-}
+
 fn icone_hero() -> Element<'static, Evento> {
-    container(crate::marca::icone_atual(86.))
-        // Nunca usar center_y(Fill) dentro de scrollable vertical:
-        // center_y define a altura do Container e sobrescreve height(Fixed).
-        // No F1 isso gerava altura praticamente ilimitada e overflow
-        // ao converter coordenadas de glifos no cosmic-text.
-        .center_x(Length::Fixed(96.))
-        .center_y(Length::Fixed(96.)).into()
+    consulta::marca()
 }
 fn ilustra_planilha() -> Element<'static, Evento> {
-    let svg = format!(
-        r##"<svg xmlns="http://www.w3.org/2000/svg" width="164" height="132" viewBox="0 0 164 132">
-          <rect x="19" y="13" width="127" height="101" rx="12" fill="{fundo}" stroke="{borda}" stroke-width="1.5"/>
-          <path d="M19 24Q19 13 31 13H134Q146 13 146 24V39H19Z" fill="{cor}" opacity=".85"/>
-          <circle cx="33" cy="26" r="3" fill="white"/><circle cx="45" cy="26" r="3" fill="white"/>
-          <circle cx="57" cy="26" r="3" fill="white"/>
-          <path d="M29 51H136M29 70H136M29 89H136M53 44V103M80 44V103M107 44V103" stroke="{grade}" stroke-width="1.1"/>
-          <rect x="54" y="52" width="26" height="18" rx="2" fill="{cor}" opacity=".34"/>
-          <rect x="80" y="70" width="27" height="19" rx="2" fill="{cor}" opacity=".2"/>
-          <rect x="111" y="92" width="46" height="29" rx="8" fill="{fundo}" stroke="{borda}"/>
-          <text x="134" y="111" font-size="17" text-anchor="middle" fill="{cor}" font-weight="bold" font-family="sans-serif">fx</text>
-        </svg>"##,
-        cor=tema::acento_hex(),
-        fundo=if tema::escuro() {"#292d32"} else {"#ffffff"},
-        borda=if tema::escuro() {"#485055"} else {"#dce4e9"},
-        grade=if tema::escuro() {"#52565e"} else {"#e0e5eb"}
-    );
-    container(svg::Svg::new(svg::Handle::from_memory(svg.into_bytes()))
-        .width(Length::Fixed(164.)).height(Length::Fixed(132.)))
-        .center_x(Length::Fixed(184.))
-        .style(|_|container::Style {
-            background: Some(Background::Color(fundo_pastel())),
-            border: Border {radius: 20.0.into(), ..Default::default()},
-            ..Default::default()
-        }).into()
+    consulta::ilustracao_planilha()
 }
 fn resumo(t: &Topico) -> String {
     t.linhas.iter().find_map(|l| match l {
@@ -143,51 +77,16 @@ fn guia_do_topico(s: usize, i: usize, t: &Topico) -> Guia {
     }
 }
 fn cartao(guia: &Guia) -> Element<'static, Evento> {
-    let icon = container(icones::icone(guia.icone,25.))
-        .padding(13).style(|_|container::Style {
-            background:Some(Background::Color(fundo_pastel())),
-            border:Border {radius:12.0.into(),..Default::default()},
-            ..Default::default()
-        });
-    let texto = column![
-        texto_negrito(guia.titulo.clone(), 13.5),
-        text(guia.descricao.clone()).size(11.5)
-            .color(tema::COR_TEXTO_MUTED()).line_height(1.25),
-    ].spacing(5).width(Length::Fill);
-    button(row![icon,texto,text("›").size(21.)]
-        .spacing(10).align_y(Alignment::Center))
-        .padding(13)
-        .style(estilo_card)
-        .height(Length::Fixed(118.))
-        .width(Length::FillPortion(1))
-        .on_press(guia.destino.clone()).into()
+    consulta::cartao(guia.icone, guia.titulo.clone(), guia.descricao.clone(), Some(guia.destino.clone()))
 }
 fn grade_de_cards(guias: &[Guia], colunas: usize) -> Element<'static, Evento> {
-    let mut grid = column![].spacing(12);
-    for faixa in guias.chunks(colunas) {
-        let mut linha=row![].spacing(12);
-        for item in faixa {
-            linha = linha.push(cartao(item));
-        }
-        for _ in faixa.len()..colunas {
-            linha=linha.push(Space::with_width(Length::FillPortion(1)));
-        }
-        grid=grid.push(linha);
-    }
-    grid.into()
+    consulta::grade(guias.iter().map(cartao).collect(), colunas)
 }
 fn rotulo_nav(rotulo: &'static str) -> Element<'static,Evento> {
-    container(text(rotulo).size(10.5).color(tema::COR_TEXTO_MUTED()))
-        .padding(iced::Padding{left:15.,right:5.,top:13.,bottom:4.}).into()
+    consulta::rotulo_grupo(rotulo)
 }
 fn item_nav(rotulo: String, icone: &str, ativo: bool, destino: Evento) -> Element<'static,Evento> {
-    let conteudo=row![
-        icones::icone(icone,18.),
-        text(rotulo).size(12.5).width(Length::Fill),
-    ].spacing(12).align_y(Alignment::Center);
-    button(conteudo).width(Length::Fill)
-        .padding([10,13]).style(move|tema,status|estilo_nav(tema,status,ativo))
-        .on_press(destino).into()
+    consulta::item_nav(rotulo, icone, ativo, Some(destino))
 }
 fn navega(catalogo: &Catalogo, estado: &Estado) -> Element<'static,Evento> {
     let mut nav=column![].spacing(2);
