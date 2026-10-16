@@ -25,6 +25,36 @@ pub fn produto_atual()->Produto {
         1=>Produto::FeatherDocs,2=>Produto::FeatherSlide,_=>Produto::FeatherSheet
     }
 }
+/// Identificador do aplicativo no sistema: o nome do `.desktop` instalado
+/// (`feathersheet.desktop`) e o `app_id` das janelas no Wayland.
+pub fn id_aplicativo()->&'static str {
+    match produto_atual() {
+        Produto::FeatherSheet=>"feathersheet",
+        Produto::FeatherDocs=>"featherdocs",
+        Produto::FeatherSlide=>"featherslide",
+    }
+}
+
+static ICONE_JANELA: std::sync::OnceLock<iced::window::Icon>=std::sync::OnceLock::new();
+
+/// Ícone das janelas do aplicativo (barra de título e de tarefas no Windows e
+/// no X11). O aplicativo registra uma vez, no começo; vale para todas as janelas
+/// abertas por [`preparar_janela`].
+pub fn definir_icone_janela(icone:iced::window::Icon) {
+    let _=ICONE_JANELA.set(icone);
+}
+
+/// Completa os ajustes de toda janela do produto: `app_id` (no Linux é o que
+/// liga a janela ao `.desktop` instalado, ao nome e ao ícone no painel e no
+/// gerenciador de tarefas; sem ele a janela aparece como "Processos do Sistema")
+/// e o ícone registrado por [`definir_icone_janela`].
+pub fn preparar_janela(mut ajustes:iced::window::Settings)->iced::window::Settings {
+    #[cfg(target_os="linux")]
+    { ajustes.platform_specific.application_id=id_aplicativo().to_owned(); }
+    if ajustes.icon.is_none() { ajustes.icon=ICONE_JANELA.get().cloned(); }
+    ajustes
+}
+
 fn clarear(cor:&str,valor:f32)->String {
     let bits=u32::from_str_radix(cor.trim_start_matches('#'),16).unwrap_or(0x287846);
     let f=valor.clamp(0.,1.);

@@ -48,12 +48,12 @@ impl<T: Copy + Eq> Janelas<T> {
             self.retirar(id);
             return window::close(id);
         }
-        let (id, abrir) = window::open(window::Settings {
+        let (id, abrir) = window::open(crate::marca::preparar_janela(window::Settings {
             size: tamanho,
             decorations: !barra_propria,
             exit_on_close_request: false,
             ..Default::default()
-        });
+        }));
         self.registrar(id, tipo);
         abrir
     }
