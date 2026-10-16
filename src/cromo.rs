@@ -75,7 +75,7 @@ pub fn barra_editor<'a, M: Clone + 'static>(
     // tem o botão Menu na faixa) e o botão "Arquivos" seria repetido.
     let mut itens = row![emblema()].spacing(2).align_y(Alignment::Center);
     if let Some(abrir) = abrir_arquivos {
-        itens = itens.push(button(text("Arquivos").size(12.5)).padding([7, 10])
+        itens = itens.push(button(text(crate::idioma::t("Arquivos")).size(12.5)).padding([7, 10])
             .style(estilo_botao_pequeno(false)).on_press(abrir));
     }
     itens = itens.push(Space::with_width(6));
@@ -85,11 +85,11 @@ pub fn barra_editor<'a, M: Clone + 'static>(
     itens = itens.push(Space::with_width(10))
         .push(row![
             text(arquivo.to_owned()).size(13),
-            text(if alterado { "• não salvo" } else { "salvo" })
+            text(if alterado { crate::idioma::t("• não salvo") } else { crate::idioma::t("salvo") })
                 .size(11.5).color(COR_TEXTO_MUTED()),
         ].spacing(8).align_y(Alignment::Center))
         .push(Space::with_width(Length::Fill))
-        .push(acao("settings", "Configurações", Some(abrir_configuracoes)));
+        .push(acao("settings", crate::idioma::t("Configurações"), Some(abrir_configuracoes)));
     column![
         container(itens).padding([0, 12]).width(Length::Fill)
             .height(Length::Fixed(BARRA_ALTURA)).style(estilo_container_topo),
@@ -179,7 +179,7 @@ pub fn menu_arquivos<'a, M: Clone + 'a>(
 ) -> Element<'a, M> {
     let mut itens = column![
         text(aplicativo.to_owned()).size(18),
-        text("Arquivos e ferramentas").size(12).color(COR_TEXTO_MUTED()),
+        text(crate::idioma::t("Arquivos e ferramentas")).size(12).color(COR_TEXTO_MUTED()),
         Space::with_height(8),
     ].spacing(6);
     for (icone_nome, rotulo, mensagem) in opcoes {
@@ -204,7 +204,7 @@ pub fn painel_utilitario<'a, M: Clone + 'a>(
         row![
             text(titulo.to_owned()).size(20),
             Space::with_width(Length::Fill),
-            button(text("Fechar").size(12)).padding([6, 12])
+            button(text(crate::idioma::t("Fechar")).size(12)).padding([6, 12])
                 .style(estilo_botao_secundario).on_press(fechar),
         ].align_y(Alignment::Center),
         conteudo,

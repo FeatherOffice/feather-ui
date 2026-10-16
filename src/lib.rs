@@ -17,6 +17,7 @@ pub mod configuracoes;
 pub mod consulta;
 pub mod creditos;
 pub mod icones;
+pub mod idioma;
 pub mod marca;
 pub mod monitor;
 pub mod janelas;

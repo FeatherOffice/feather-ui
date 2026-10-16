@@ -49,6 +49,10 @@ impl Nivel {
     pub fn da_mensagem(msg: &str) -> Self {
         let msg = msg.to_lowercase();
         if msg.starts_with("erro")
+            || msg.starts_with("error")
+            || msg.starts_with("failed")
+            || msg.starts_with("could not")
+            || msg.contains("invalid")
             || msg.starts_with("falha")
             || msg.starts_with("não foi possível")
             || msg.contains("inválid")
@@ -56,6 +60,10 @@ impl Nivel {
         {
             Self::Erro
         } else if msg.contains("cancelad")
+            || msg.contains("cancel")
+            || msg.starts_with("select ")
+            || msg.starts_with("open ")
+            || msg.starts_with("enter ")
             || msg.starts_with("selecione")
             || msg.starts_with("abra ")
             || msg.starts_with("informe ")
@@ -113,7 +121,7 @@ impl Console {
             acompanhar: true,
         };
         console.registrar(Nivel::Info, "Sistema",
-            &format!("{aplicativo} iniciado. Console local da sessão pronto."));
+            &crate::idioma::tf("{} iniciado. Console local da sessão pronto.", &[&aplicativo]));
         console
     }
 
@@ -129,7 +137,7 @@ impl Console {
         let mut mensagem = mensagem[..fim].to_owned();
         // O truncamento usa a fronteira UTF-8 para preservar acentos.
         if truncada {
-            mensagem.push_str(" … [registro limitado]");
+            mensagem.push_str(crate::idioma::t(" … [registro limitado]"));
         }
         let segundos = self.inicio.elapsed().as_secs();
         self.revisao = self.revisao.wrapping_add(1);
@@ -157,7 +165,7 @@ impl Console {
             inicio += 1;
         }
         if inicio > 0 {
-            self.registrar(Nivel::Aviso, origem, "Saída extensa: exibindo o trecho final.");
+            self.registrar(Nivel::Aviso, origem, crate::idioma::t("Saída extensa: exibindo o trecho final."));
         }
         for linha in saida[inicio..].lines().filter(|s| !s.is_empty()) {
             self.registrar(Nivel::da_mensagem(linha), origem, linha);
@@ -332,9 +340,9 @@ impl Monitor {
     ) -> Element<'a, M> {
         let mut abas = row![].spacing(14).align_y(Alignment::Center);
         for (i, (titulo, icone)) in [
-            ("Memória", "device-desktop"),
-            ("Console", "terminal"),
-            ("Métricas", "chart-bar"),
+            (crate::idioma::t("Memória"), "device-desktop"),
+            (crate::idioma::t("Console"), "terminal"),
+            (crate::idioma::t("Métricas"), "chart-bar"),
         ].into_iter().enumerate() {
             let selecionado = self.aba == i;
             let cor = if selecionado { verde() } else { COR_TEXTO_MUTED() };
@@ -369,7 +377,7 @@ impl Monitor {
             _ => self.view_memoria(msg.clone()),
         };
         let rodape = row![
-            text(ocupado.unwrap_or_else(|| "Sessão ativa".into())).size(11).color(COR_TEXTO_MUTED()),
+            text(ocupado.unwrap_or_else(|| crate::idioma::t("Sessão ativa").into())).size(11).color(COR_TEXTO_MUTED()),
             Space::with_width(Length::Fill),
             container(Space::new(Length::Fixed(9.0), Length::Fixed(9.0)))
                 .style(|_| container::Style {
@@ -377,7 +385,7 @@ impl Monitor {
                     border: Border { radius: 5.0.into(), ..Default::default() },
                     ..Default::default()
                 }),
-            text("Registros locais · atualização a cada segundo").size(11).color(COR_TEXTO_MUTED()),
+            text(crate::idioma::t("Registros locais · atualização a cada segundo")).size(11).color(COR_TEXTO_MUTED()),
         ].spacing(9).align_y(Alignment::Center);
         container(column![abas, divisor(), corpo, divisor(), rodape].spacing(13))
             .padding([18, 22])
@@ -390,10 +398,10 @@ impl Monitor {
         let console = &self.console;
         let mut filtros = row![].spacing(4);
         for (nome, nivel) in [
-            ("Todos", None),
-            ("Informações", Some(Nivel::Info)),
-            ("Avisos", Some(Nivel::Aviso)),
-            ("Erros", Some(Nivel::Erro)),
+            (crate::idioma::t("Todos"), None),
+            (crate::idioma::t("Informações"), Some(Nivel::Info)),
+            (crate::idioma::t("Avisos"), Some(Nivel::Aviso)),
+            (crate::idioma::t("Erros"), Some(Nivel::Erro)),
         ] {
             filtros = filtros.push(
                 button(text(nome).size(12))
@@ -403,7 +411,7 @@ impl Monitor {
             );
         }
         let ao_buscar = msg.clone();
-        let busca = text_input("Pesquisar mensagem ou origem…", &console.busca)
+        let busca = text_input(crate::idioma::t("Pesquisar mensagem ou origem…"), &console.busca)
             .size(13)
             .padding([9, 12])
             .style(estilo_entrada_suspensa)
@@ -431,11 +439,11 @@ impl Monitor {
             linhas = linhas.push(
                 container(
                     column![
-                        text("Nenhum registro para exibir").size(17),
+                        text(crate::idioma::t("Nenhum registro para exibir")).size(17),
                         text(if console.registros.is_empty() {
-                            "Novas operações, erros e saídas de macros aparecerão aqui."
+                            crate::idioma::t("Novas operações, erros e saídas de macros aparecerão aqui.")
                         } else {
-                            "Altere a busca ou o filtro para ver outros registros."
+                            crate::idioma::t("Altere a busca ou o filtro para ver outros registros.")
                         })
                         .size(13)
                         .color(COR_TEXTO_MUTED()),
@@ -449,11 +457,10 @@ impl Monitor {
             .height(Length::Fill)
             .style(painel);
         let resumo = format!(
-            "{} de {} registros{}",
-            total_visivel,
-            console.registros.len(),
+            "{}{}",
+            crate::idioma::tf("{} de {} registros", &[&total_visivel, &console.registros.len()]),
             if console.descartados > 0 {
-                format!(" · {} antigos descartados", console.descartados)
+                crate::idioma::tf(" · {} antigos descartados", &[&console.descartados])
             } else {
                 String::new()
             }
@@ -463,15 +470,15 @@ impl Monitor {
             row![
                 filtros,
                 Space::with_width(Length::Fill),
-                acao("Copiar", msg(Evento::Copiar)),
-                acao("Limpar", msg(Evento::Limpar)),
+                acao(crate::idioma::t("Copiar"), msg(Evento::Copiar)),
+                acao(crate::idioma::t("Limpar"), msg(Evento::Limpar)),
             ].spacing(6).align_y(Alignment::Center),
             lista,
             row![
                 text(resumo).size(11).color(COR_TEXTO_MUTED()),
                 Space::with_width(Length::Fill),
                 acao(
-                    if console.acompanhar { "Acompanhar: ligado" } else { "Acompanhar: desligado" },
+                    if console.acompanhar { crate::idioma::t("Acompanhar: ligado") } else { crate::idioma::t("Acompanhar: desligado") },
                     msg(Evento::Acompanhar),
                 ),
             ].spacing(8).align_y(Alignment::Center),
@@ -486,21 +493,21 @@ impl Monitor {
         let porcentagem_rss = percentual_rss(self.rss_kb, ram_total_kb());
         let porcentagem_cpu = self.cpu_anterior.map(|_| self.cpu);
         let cartoes = row![
-            cartao_destaque("Memória em uso", mib(self.rss_kb), "RAM residente do processo",
+            cartao_destaque(crate::idioma::t("Memória em uso"), mib(self.rss_kb), crate::idioma::t("RAM residente do processo"),
                 "device-desktop", verde(), Some((porcentagem_rss, "#2ab66f"))),
-            cartao_destaque("Pico observado", mib(self.pico_kb), "Maior amostra desta sessão",
+            cartao_destaque(crate::idioma::t("Pico observado"), mib(self.pico_kb), crate::idioma::t("Maior amostra desta sessão"),
                 "chart-line", azul(), None),
             cartao_destaque("CPU",
                 if self.cpu_anterior.is_some() { format!("{:.1}%", self.cpu) } else { "—".into() },
-                "Fração da capacidade total", "settings", roxo(), Some((porcentagem_cpu, "#8051d9"))),
+                crate::idioma::t("Fração da capacidade total"), "settings", roxo(), Some((porcentagem_cpu, "#8051d9"))),
         ].spacing(14);
 
         let titulo = row![
             crate::icones::icone("chart-bar", 20.0).style(|_, _| svg::Style { color: Some(verde()) }),
-            text("Histórico de memória").size(16),
+            text(crate::idioma::t("Histórico de memória")).size(16),
             Space::with_width(Length::Fill),
             button(row![
-                text(format!("Últimas {} amostras", self.amostras)).size(11),
+                text(crate::idioma::tf("Últimas {} amostras", &[&self.amostras])).size(11),
                 crate::icones::icone("chevron-down", 14.0)
                     .style(|_, _| svg::Style { color: Some(COR_TEXTO_MUTED()) }),
             ].spacing(10).align_y(Alignment::Center))
@@ -515,9 +522,9 @@ impl Monitor {
             titulo,
             grafico,
             text(if self.historico.is_empty() {
-                "Aguardando uma amostra disponível neste sistema…"
+                crate::idioma::t("Aguardando uma amostra disponível neste sistema…")
             } else {
-                "Cada barra representa uma amostra de memória do processo (RSS)."
+                crate::idioma::t("Cada barra representa uma amostra de memória do processo (RSS).")
             }).size(11).color(COR_TEXTO_MUTED()),
         ].spacing(12))
             .padding(16)
@@ -529,7 +536,7 @@ impl Monitor {
             for n in [20, 40, 80] {
                 opcoes = opcoes.push(
                     button(row![
-                        text(format!("Últimas {n} amostras")).size(12),
+                        text(crate::idioma::tf("Últimas {} amostras", &[&n])).size(12),
                         Space::with_width(Length::Fill),
                         if self.amostras == n {
                             crate::icones::icone("circle-check", 15.0)
@@ -568,12 +575,12 @@ impl Monitor {
         for (rotulo, valor, detalhe) in metricas.cartoes {
             cartoes = cartoes.push(cartao(rotulo, valor, detalhe));
         }
-        cartoes = cartoes.push(cartao("Erros no console".into(), self.console.erros().to_string(),
-            "No histórico retido".into()));
+        cartoes = cartoes.push(cartao(crate::idioma::t("Erros no console").into(), self.console.erros().to_string(),
+            crate::idioma::t("No histórico retido").into()));
         let mut corpo = column![cartoes].spacing(12);
         let sessao = self.console.inicio.elapsed().as_secs();
         let linhas = metricas.linhas.into_iter()
-            .chain([("Tempo de sessão".into(), format!("{} min {} s", sessao / 60, sessao % 60))]);
+            .chain([(crate::idioma::t("Tempo de sessão").into(), crate::idioma::tf("{} min {} s", &[&(sessao / 60), &(sessao % 60)]))]);
         for (rotulo, valor) in linhas {
             corpo = corpo.push(
                 container(
@@ -756,7 +763,7 @@ fn banner_informativo<'a, M: 'static>() -> Element<'a, M> {
     let icone = crate::icones::icone("info-circle", 21.0).style(|_, _| svg::Style { color: Some(verde()) });
     container(row![
         icone,
-        text("O monitor acompanha a memória do aplicativo inteiro, incluindo a interface e os documentos abertos.")
+        text(crate::idioma::t("O monitor acompanha a memória do aplicativo inteiro, incluindo a interface e os documentos abertos."))
             .size(12)
             .color(COR_TEXTO_MUTED()),
     ].spacing(13).align_y(Alignment::Center))
