@@ -14,7 +14,7 @@ pub const COLABORADORES: &[(&str, &str)] = &[
 ];
 
 pub fn colaboradores<'a, M: 'a>() -> Element<'a, M> {
-    let mut lista = column![text("Colaboradores").size(15).color(COR_TEXTO())].spacing(6);
+    let mut lista = column![text(crate::idioma::t("Colaboradores")).size(15).color(COR_TEXTO())].spacing(6);
     for (nome, papel) in COLABORADORES {
         lista = lista.push(row![
             text(*nome).size(13.5).color(COR_TEXTO()).width(Length::Fixed(190.0)),

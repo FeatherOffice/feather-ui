@@ -20,7 +20,7 @@ pub fn painel<'a, M: Clone + 'a>(
     let mut opcoes = column![].spacing(5);
     for (chave, rotulo) in OPCOES {
         opcoes = opcoes.push(
-            button(text(rotulo).size(12))
+            button(text(crate::idioma::t(rotulo)).size(12))
                 .padding([5, 9])
                 .style(tema::estilo_botao_pequeno(selecionado == chave))
                 .on_press(escolher(chave)),
@@ -29,12 +29,12 @@ pub fn painel<'a, M: Clone + 'a>(
     let corpo = column![
         opcoes,
         row![
-            button(text("Fechar").size(12))
+            button(text(crate::idioma::t("Fechar")).size(12))
                 .on_press(fechar)
                 .style(tema::estilo_botao_pequeno(false))
         ],
     ].spacing(8);
-    formatacao::popover("Efeitos de imagem", corpo.into())
+    formatacao::popover(crate::idioma::t("Efeitos de imagem"), corpo.into())
 }
 
 #[cfg(test)]

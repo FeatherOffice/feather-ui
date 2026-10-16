@@ -272,7 +272,7 @@ pub fn menu<'a, M: Clone + 'a>(
         pai.push(indice);
     }
     lista.push(
-        button(text("Fechar").size(11))
+        button(text(crate::idioma::t("Fechar")).size(11))
             .on_press(EventoMenu::Fechar)
     ).into()
 }

@@ -229,7 +229,7 @@ fn botao_pena<'a>(estado: &Estado, f: Ferramenta) -> Element<'a, Evento> {
         .padding([1, 4])
         .style(estilo_botao_pequeno(estado.menu == Some(f)))
         .on_press(Evento::AlternarMenu(f));
-    let dica = format!("{} (clique de novo para cor e espessura)", f.rotulo());
+    let dica = crate::idioma::tf("{} (clique de novo para cor e espessura)", &[&crate::idioma::t(f.rotulo())]);
     crate::formatacao::dica(column![principal, seta].spacing(1), &dica)
 }
 
@@ -245,32 +245,32 @@ pub fn grupos_faixa<'a>(estado: &Estado) -> Vec<Element<'a, Evento>> {
     .align_y(Alignment::Center);
     let ativo = |f: Ferramenta| estado.ativo && estado.ferramenta == f;
     let borrachas = column![
-        botao_pequeno(icone("eraser", 17.0), "Borracha de traço", Some(Evento::Escolher(Ferramenta::BorrachaTraco)), ativo(Ferramenta::BorrachaTraco)),
-        botao_pequeno(icone("eraser", 17.0), "Borracha de ponto", Some(Evento::Escolher(Ferramenta::BorrachaPonto)), ativo(Ferramenta::BorrachaPonto)),
-        botao_pequeno(icone("lasso", 17.0), "Laço", Some(Evento::Escolher(Ferramenta::Laco)), ativo(Ferramenta::Laco)),
+        botao_pequeno(icone("eraser", 17.0), crate::idioma::t("Borracha de traço"), Some(Evento::Escolher(Ferramenta::BorrachaTraco)), ativo(Ferramenta::BorrachaTraco)),
+        botao_pequeno(icone("eraser", 17.0), crate::idioma::t("Borracha de ponto"), Some(Evento::Escolher(Ferramenta::BorrachaPonto)), ativo(Ferramenta::BorrachaPonto)),
+        botao_pequeno(icone("lasso", 17.0), crate::idioma::t("Laço"), Some(Evento::Escolher(Ferramenta::Laco)), ativo(Ferramenta::Laco)),
     ]
     .spacing(3);
     let parar: Element<'a, Evento> = if estado.ativo {
         crate::formatacao::dica(
-            botao_grande(icone("hand-stop", 23.0), "Parar de desenhar", Some(Evento::Parar), false),
-            "Volta à seleção normal (Esc)",
+            botao_grande(icone("hand-stop", 23.0), crate::idioma::t("Parar de desenhar"), Some(Evento::Parar), false),
+            crate::idioma::t("Volta à seleção normal (Esc)"),
         )
     } else {
         crate::formatacao::dica(
-            botao_grande(icone("hand-stop", 23.0), "Parar de desenhar", None, false),
-            "Escolha uma caneta para desenhar; aqui volta à seleção",
+            botao_grande(icone("hand-stop", 23.0), crate::idioma::t("Parar de desenhar"), None, false),
+            crate::idioma::t("Escolha uma caneta para desenhar; aqui volta à seleção"),
         )
     };
     vec![
-        grupo_faixa_compacto(row![canetas, borrachas].spacing(8).align_y(Alignment::Center).into(), "Ferramentas de desenho"),
+        grupo_faixa_compacto(row![canetas, borrachas].spacing(8).align_y(Alignment::Center).into(), crate::idioma::t("Ferramentas de desenho")),
         grupo_faixa_compacto(
             crate::formatacao::dica(
-                botao_grande(icone("wand", 23.0), "Tinta para forma", Some(Evento::AlternarFormas), estado.tinta_para_forma),
-                "Linha, seta, retângulo, triângulo e elipse viram formas perfeitas",
+                botao_grande(icone("wand", 23.0), crate::idioma::t("Tinta para forma"), Some(Evento::AlternarFormas), estado.tinta_para_forma),
+                crate::idioma::t("Linha, seta, retângulo, triângulo e elipse viram formas perfeitas"),
             ),
-            "Converter",
+            crate::idioma::t("Converter"),
         ),
-        grupo_faixa_compacto(parar, "Modo"),
+        grupo_faixa_compacto(parar, crate::idioma::t("Modo")),
     ]
 }
 
@@ -322,11 +322,11 @@ pub fn menu_pena<'a>(estado: &Estado) -> Option<Element<'a, Evento>> {
         );
     }
     let corpo = column![
-        row![text(f.rotulo()).size(14), Space::with_width(Length::Fill), botao_fechar(Evento::FecharMenu)]
+        row![text(crate::idioma::t(f.rotulo())).size(14), Space::with_width(Length::Fill), botao_fechar(Evento::FecharMenu)]
             .align_y(Alignment::Center),
-        text("COR").size(10.5).color(COR_TEXTO_MUTED()),
+        text(crate::idioma::t("COR")).size(10.5).color(COR_TEXTO_MUTED()),
         cores,
-        text("ESPESSURA").size(10.5).color(COR_TEXTO_MUTED()),
+        text(crate::idioma::t("ESPESSURA")).size(10.5).color(COR_TEXTO_MUTED()),
         grossuras,
     ]
     .spacing(8)

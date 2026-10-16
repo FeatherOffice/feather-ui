@@ -983,7 +983,7 @@ dependencies = [
 
 [[package]]
 name = "feather-ui"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "iced",
  "libc",

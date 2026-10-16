@@ -561,7 +561,7 @@ mod testes_rolagem {
     #[test]
     fn aceita_elemento_fill_sem_panic_no_eixo_vertical() {
         let conteudo = iced::widget::column![
-            iced::widget::text("Planilhas recentes")
+            iced::widget::text(crate::idioma::t("Planilhas recentes"))
         ].height(iced::Length::Fill);
         // Antes: rolagem(conteudo) causava panic em iced_widget::scrollable.
         let _: iced::widget::Scrollable<'_, ()> = super::rolagem(conteudo);
@@ -595,7 +595,7 @@ pub fn botao_fechar<'a, M: Clone + 'a + 'static>(msg: M) -> iced::Element<'a, M>
         .padding([5, 7])
         .style(estilo_botao_pequeno(false))
         .on_press(msg);
-    tooltip(botao, iced::widget::text("Fechar").size(12), tooltip::Position::Bottom)
+    tooltip(botao, iced::widget::text(crate::idioma::t("Fechar")).size(12), tooltip::Position::Bottom)
         .style(estilo_dica)
         .into()
 }

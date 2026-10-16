@@ -90,7 +90,7 @@ fn item_nav(rotulo: String, icone: &str, ativo: bool, destino: Evento) -> Elemen
 }
 fn navega(catalogo: &Catalogo, estado: &Estado) -> Element<'static,Evento> {
     let mut nav=column![].spacing(2);
-    nav=nav.push(item_nav("Início".into(),"file-plus",
+    nav=nav.push(item_nav(crate::idioma::t("Início").into(),"file-plus",
         estado.secao==0 && estado.topico.is_none() && estado.busca.trim().is_empty(),
         Evento::IrSecao(0)));
     let Some(primeiro)=catalogo.secoes.first() else {return nav.into();};
@@ -117,15 +117,15 @@ fn navega(catalogo: &Catalogo, estado: &Estado) -> Element<'static,Evento> {
         }
         nav
     };
-    nav=group(nav,"BÁSICO",&basico);
-    nav=group(nav,"AVANÇADO",&avancado);
+    nav=group(nav,crate::idioma::t("BÁSICO"),&basico);
+    nav=group(nav,crate::idioma::t("AVANÇADO"),&avancado);
     for (i,s) in catalogo.secoes.iter().enumerate().skip(1) {
         if s.id=="atalhos" {continue;}
         nav=nav.push(item_nav(s.titulo.clone(),icone_topico(&s.id),
             estado.busca.trim().is_empty() && estado.secao==i && estado.topico.is_none(),
             Evento::IrSecao(i)));
     }
-    nav=group(nav,"OUTROS",&outros);
+    nav=group(nav,crate::idioma::t("OUTROS"),&outros);
     for i in outros_indices {
         if let Some(t)=primeiro.topicos.get(i) {
             nav=nav.push(item_nav(t.titulo.clone(),icone_topico(&t.id),
@@ -142,7 +142,7 @@ fn navega(catalogo: &Catalogo, estado: &Estado) -> Element<'static,Evento> {
     nav.into()
 }
 fn home(catalogo: &Catalogo) -> Element<'static, Evento> {
-    let Some(secao)=catalogo.secoes.first() else {return text("Ajuda indisponível.").into()};
+    let Some(secao)=catalogo.secoes.first() else {return text(crate::idioma::t("Ajuda indisponível.")).into()};
     let intro=secao.introducao.clone();
     let hero=row![
         icone_hero(),
@@ -267,7 +267,7 @@ fn conteudo(catalogo:&Catalogo,estado:&Estado)->Element<'static,Evento>{
         ].spacing(16).into();
     }
     let Some(secao)=catalogo.secoes.get(estado.secao) else {
-        return text("Ajuda indisponível.").into();
+        return text(crate::idioma::t("Ajuda indisponível.")).into();
     };
     if estado.secao==0&&estado.topico.is_none() {
         return home(catalogo);

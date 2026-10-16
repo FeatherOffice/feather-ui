@@ -290,20 +290,20 @@ fn painel_base<'a>(titulo: &'static str, atual: &str, hsva: [f32;4], texto_hex: 
     })).spacing(4);
 
     let mut rodape = row![
-        button(text("Sem cor").size(12)).padding([5, 9])
+        button(text(crate::idioma::t("Sem cor")).size(12)).padding([5, 9])
             .style(estilo_botao_pequeno(atual.is_empty()))
             .on_press(Evento::Escolhida(String::new())),
     ].align_y(Alignment::Center).spacing(8);
     if !embutido {
         rodape = rodape.push(Space::with_width(Length::Fill))
-            .push(button(text("Fechar").size(12)).padding([5, 9])
+            .push(button(text(crate::idioma::t("Fechar")).size(12)).padding([5, 9])
                 .style(estilo_botao_pequeno(false)).on_press(Evento::Fechar));
     }
     let conteudo = column![
         text(titulo).size(12).color(COR_TEXTO_MUTED()),
         row![quadrado, matiz].spacing(8).height(Length::Fixed(150.0)),
         alfa,
-        row![previa, text("Prévia").size(11).color(COR_TEXTO_MUTED())]
+        row![previa, text(crate::idioma::t("Prévia")).size(11).color(COR_TEXTO_MUTED())]
             .spacing(10).align_y(Alignment::Center),
         row![
             column![
