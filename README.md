@@ -106,7 +106,7 @@ No `Cargo.toml` do aplicativo:
 
 ```toml
 [dependencies]
-feather-ui = { git = "https://github.com/FeatherOffice/feather-ui", tag = "v0.2.0" }
+feather-ui = { git = "https://github.com/FeatherOffice/feather-ui", tag = "v0.2.9" }
 ```
 
 Para desenvolver a biblioteca e o aplicativo lado a lado, aponte para a cópia

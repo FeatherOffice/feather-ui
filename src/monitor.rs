@@ -638,6 +638,7 @@ fn roxo() -> Color {
 }
 
 /// RSS do processo em KiB (Linux: `/proc/self/status`).
+#[cfg(not(windows))]
 fn rss_atual_kb() -> Option<u64> {
     std::fs::read_to_string("/proc/self/status").ok()?
         .lines().find(|l| l.starts_with("VmRSS:"))?
@@ -645,6 +646,7 @@ fn rss_atual_kb() -> Option<u64> {
 }
 
 /// (tempo de CPU do processo, tempo total do sistema), em ticks.
+#[cfg(not(windows))]
 fn cpu_atual() -> Option<(u64, u64)> {
     let proc = std::fs::read_to_string("/proc/self/stat").ok()?;
     let campos: Vec<&str> = proc.rsplit_once(')')?.1.split_whitespace().collect();
@@ -655,8 +657,8 @@ fn cpu_atual() -> Option<(u64, u64)> {
 }
 
 /// Total físico Linux lido uma vez, para NÃO inventar percentual RSS.
-/// Sem fonte nativa disponível (Windows), o medidor exibe '—'.
-fn ram_total_kb() -> Option<u64> {
+/// No Windows vem do `GlobalMemoryStatusEx`; sem fonte nativa (macOS), o medidor exibe '—'.
+pub fn ram_total_kb() -> Option<u64> {
     #[cfg(target_os = "linux")]
     {
         static TOTAL: std::sync::OnceLock<Option<u64>> = std::sync::OnceLock::new();
@@ -667,8 +669,52 @@ fn ram_total_kb() -> Option<u64> {
                 }).filter(|&n| n > 0)
         })
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
+        // SAFETY: estrutura zerada com o tamanho preenchido, como a API pede.
+        let mut m: MEMORYSTATUSEX = unsafe { std::mem::zeroed() };
+        m.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+        (unsafe { GlobalMemoryStatusEx(&mut m) } != 0 && m.ullTotalPhys > 0).then(|| m.ullTotalPhys / 1024)
+    }
+    #[cfg(not(any(target_os = "linux", windows)))]
     { None }
+}
+
+/// Windows (16/10/2026): sem `/proc`, o medidor ficava em "—". A memória é
+/// o conjunto de trabalho do processo, como o Gerenciador de Tarefas mostra.
+#[cfg(windows)]
+fn rss_atual_kb() -> Option<u64> {
+    use windows_sys::Win32::System::ProcessStatus::{K32GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
+    use windows_sys::Win32::System::Threading::GetCurrentProcess;
+    // SAFETY: estrutura zerada, tamanho correto e o pseudo-handle do próprio processo.
+    let mut c: PROCESS_MEMORY_COUNTERS = unsafe { std::mem::zeroed() };
+    let tamanho = std::mem::size_of::<PROCESS_MEMORY_COUNTERS>() as u32;
+    c.cb = tamanho;
+    (unsafe { K32GetProcessMemoryInfo(GetCurrentProcess(), &mut c, tamanho) } != 0)
+        .then(|| c.WorkingSetSize as u64 / 1024)
+}
+
+/// Windows: (núcleo + usuário do processo, núcleo + usuário do sistema), em
+/// unidades de 100 ns. O tempo de núcleo do sistema já inclui o ocioso, e as
+/// duas somas valem para todos os processadores, como no `/proc/stat`.
+#[cfg(windows)]
+fn cpu_atual() -> Option<(u64, u64)> {
+    use windows_sys::Win32::Foundation::FILETIME;
+    use windows_sys::Win32::System::Threading::{GetCurrentProcess, GetProcessTimes, GetSystemTimes};
+    let valor = |f: &FILETIME| (u64::from(f.dwHighDateTime) << 32) | u64::from(f.dwLowDateTime);
+    let zero = FILETIME { dwLowDateTime: 0, dwHighDateTime: 0 };
+    let (mut criacao, mut saida, mut nucleo, mut usuario) = (zero, zero, zero, zero);
+    // SAFETY: ponteiros para estruturas locais válidas.
+    if unsafe { GetProcessTimes(GetCurrentProcess(), &mut criacao, &mut saida, &mut nucleo, &mut usuario) } == 0 {
+        return None;
+    }
+    let (mut ocioso, mut nucleo_s, mut usuario_s) = (zero, zero, zero);
+    // SAFETY: idem.
+    if unsafe { GetSystemTimes(&mut ocioso, &mut nucleo_s, &mut usuario_s) } == 0 {
+        return None;
+    }
+    Some((valor(&nucleo) + valor(&usuario), valor(&nucleo_s) + valor(&usuario_s)))
 }
 
 fn percentual_rss(rss_kb: u64, total_kb: Option<u64>) -> Option<f32> {
